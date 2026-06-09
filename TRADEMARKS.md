@@ -1,10 +1,14 @@
-# Cortex Trademark Notice
+# Cortex Name and Branding Notice
 
-`Cortex`, the Cortex logo, and related visual branding are reserved identifiers
-of the original project author.
+This repository does not claim any registered trademark.
 
-This repository's source code is licensed under the terms in [LICENSE](LICENSE),
-but that license does not grant trademark rights.
+`Cortex`, the Cortex logo, and related visual branding are used here as the
+project name and identity of the original author, `Ransen1337-star`.
+
+The source code license in [LICENSE](LICENSE) covers code usage and
+redistribution. It does not, by itself, grant permission to present a modified
+version as the official Cortex project or to imply endorsement by the original
+author.
 
 You may:
 
@@ -13,11 +17,11 @@ You may:
 - keep the original name when redistributing unmodified copies with the required notices
 - preserve attribution as `Cortex by Ransen1337-star` when redistributing copies
 
-You may not:
+Please do not:
 
-- use the Cortex name or logo in a way that suggests endorsement by the original author
+- imply that the original author endorses your fork, project, or service
 - market a modified fork as the official Cortex project
-- use the Cortex branding for commercial promotion without separate permission
+- remove required attribution or notice files
 
-For commercial licensing or branding permission, contact the original author:
+For name or branding questions, contact the original author:
 `Ransen1337-star`

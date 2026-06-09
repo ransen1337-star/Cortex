@@ -1,8 +1,6 @@
 from main.core.branding import PROJECT_NAME
 
 
-SHARE_CARD_SVG_EXAMPLE = '<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg"></svg>'
-
 BILIBILI_VIDEO_ANALYSIS_EXAMPLES = {
     "bilibili_source_file": {
         "summary": "Bilibili source file",
@@ -14,8 +12,24 @@ BILIBILI_VIDEO_ANALYSIS_EXAMPLES = {
             "video_id": "BV1xx411c7mu",
             "title": "Example Bilibili video",
             "description": "Public video metadata extracted from Bilibili.",
+            "declaration": None,
             "duration_seconds": 291.0,
             "published_at": "2026-06-05T10:05:28Z",
+            "author": {
+                "name": "Example Bilibili Creator",
+                "unique_id": "946974",
+                "sec_uid": None,
+                "profile_url": "https://space.bilibili.com/946974",
+                "avatar_url": "https://example.com/avatar.jpg",
+                "signature": "Example public creator signature.",
+                "follower_count": 4200000,
+                "total_favorited": None,
+                "verification": {
+                    "is_verified": True,
+                    "theme": "blue",
+                    "text": "bilibili机构认证 Example official verification",
+                },
+            },
             "metrics": {
                 "play_count": 5030049,
                 "danmaku_count": 6964,
@@ -29,11 +43,13 @@ BILIBILI_VIDEO_ANALYSIS_EXAMPLES = {
                 "url": "https://example.com/video.mp4",
                 "request_headers": {"User-Agent": "Mozilla/5.0"},
                 "source_mode": "single_file",
+                "audio_url": None,
                 "format_id": "html5-durl-64",
                 "quality": "720P",
                 "container": "mp4",
                 "width": 1280,
                 "height": 720,
+                "fps": None,
             },
             "cover_source": {
                 "url": "https://example.com/cover.jpg",
@@ -73,21 +89,27 @@ DOUYIN_VIDEO_ANALYSIS_EXAMPLES = {
                 },
             },
             "metrics": {
+                "play_count": None,
+                "danmaku_count": None,
                 "comment_count": 238,
                 "like_count": 7171,
                 "share_count": 159,
                 "favorite_count": 255,
+                "coin_count": None,
             },
             "video_source": {
                 "url": "https://example.com/video.mp4",
+                "request_headers": None,
                 "source_mode": "single_file",
+                "audio_url": None,
                 "format_id": "douyin-play",
                 "quality": "720p",
                 "container": "mp4",
                 "width": 2160,
                 "height": 3840,
+                "fps": None,
             },
-            "cover_source": {"url": "https://example.com/cover.jpeg"},
+            "cover_source": {"url": "https://example.com/cover.jpeg", "request_headers": None},
         },
     }
 }
@@ -100,8 +122,11 @@ def build_json_example_response(examples: dict[str, object]) -> dict[str, object
     }
 
 
-def build_svg_example_response() -> dict[str, object]:
+def build_image_example_response() -> dict[str, object]:
     return {
-        "description": "SVG share card",
-        "content": {"image/svg+xml": {"example": SHARE_CARD_SVG_EXAMPLE}},
+        "description": "Share card image or SVG",
+        "content": {
+            "image/svg+xml": {"schema": {"type": "string", "format": "binary"}},
+            "image/png": {"schema": {"type": "string", "format": "binary"}},
+        },
     }

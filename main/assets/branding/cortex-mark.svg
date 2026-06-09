@@ -1,0 +1,15 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cortex-mark-title cortex-mark-desc">
+  <title id="cortex-mark-title">Cortex mark</title>
+  <desc id="cortex-mark-desc">Cortex icon mark using the same bold rounded C monogram as the full wordmark on a transparent background.</desc>
+  <defs>
+    <linearGradient id="cortex-mark-gradient" x1="22" y1="20" x2="230" y2="228" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F172A"/>
+      <stop offset="0.5" stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M188 42C165 21 136 12 104 12C49 12 14 55 14 128C14 201 49 244 104 244C135 244 165 235 188 214" stroke="url(#cortex-mark-gradient)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M156 72C143 61 125 56 109 56C72 56 48 86 48 128C48 170 72 200 109 200C125 200 143 195 156 184" stroke="#D8FFF4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 212H232" stroke="url(#cortex-mark-gradient)" stroke-width="14" stroke-linecap="round"/>
+</svg>

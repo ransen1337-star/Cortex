@@ -1,69 +1,195 @@
 <div align="center">
 
-<img src="main/assets/cortex-logo.svg" alt="Cortex 标志" width="420">
+<img src="main/assets/branding/cortex-logo.svg" alt="Cortex 标志" width="620">
 
 # Cortex
 
-**Cortex，面向 Bilibili 与抖音视频解析的轻量公开源码项目**
+**面向 Bilibili 与抖音公开视频解析的 API 源码项目**
 
 <p>
-  <a href="README.md"><strong>概览</strong></a>
+  <a href="README.md"><strong>总览</strong></a>
   &nbsp;|&nbsp;
   <a href="README.en.md"><strong>English</strong></a>
-</p>
-
-<p>
-  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white" alt="FastAPI">
-  <img src="https://img.shields.io/badge/Pydantic-v2-E92063" alt="Pydantic">
-  <img src="https://img.shields.io/badge/Mode-API--only-2563EB" alt="Mode">
 </p>
 
 </div>
 
 ## 简介
 
-Cortex 用于公开源码方式提供视频解析能力，统一输出标题、描述、发布时间、互动指标、视频源、封面源，并支持生成 SVG 分享卡片。
+Cortex 是一个只做 API 的 FastAPI 项目，专注于 Bilibili 与抖音公开视频解析。
 
-项目根目录只保留 `start.py`，其余源码、资源、文档与依赖统一放在 `main/` 中，结构更清晰，也更方便维护。
+它提供：
 
-## 文档
+- Bilibili 与抖音统一返回结构
+- 链接过滤、规范化与固定示例链接校验
+- 作者、视频与封面等元数据提取
+- 支持 `svg` 或 `png` 的分享卡片，`png` 提供 `performance`、`balanced`、`quality` 三档
+- 根目录只保留 `start.py` 的简洁 `main/` 结构
 
-- 概览：[README.md](README.md)
-- English：[README.en.md](README.en.md)
+## 统一返回结构
 
-> #### <img src="main/assets/callout-important.svg" alt="" width="18" align="absmiddle"> 重要说明
->
-> - 本项目仅面向公开链接解析，不处理私有内容或登录态内容
-> - 使用者必须合规使用接口与抓取结果
-> - 抖音公开分享页当前可能无法稳定返回真实播放量
-> - 面向公众提供服务时，建议补充风控、缓存、日志与来源限制
+```json
+{
+  "product": "Cortex",
+  "platform": "bilibili | douyin",
+  "input_url": "string",
+  "canonical_url": "string",
+  "video_id": "string",
+  "title": "string",
+  "description": "string | null",
+  "declaration": "string | null",
+  "duration_seconds": 0.0,
+  "published_at": "ISO-8601 | null",
+  "author": {},
+  "metrics": {},
+  "video_source": {},
+  "cover_source": {}
+}
+```
 
-> #### <img src="main/assets/callout-warning.svg" alt="" width="18" align="absmiddle"> 警告
->
-> - 公开平台页面结构会变化，解析逻辑不能保证永久稳定
-> - 如果上游接口限流、签名变更或资源失效，部分字段可能短时异常
+## 预览
 
-> #### <img src="main/assets/callout-tip.svg" alt="" width="18" align="absmiddle"> 提示
->
-> - 推荐优先使用完整公开链接
-> - 启动后可直接访问 `/docs` 调试接口
-> - 若面向生产环境，建议补缓存与请求频控
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="main/assets/docs/readme-bilibili-card.png" alt="Bilibili 分享卡片预览" width="96%">
+      <br>
+      <strong>Bilibili 分享卡片</strong>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="main/assets/docs/readme-douyin-card.png" alt="抖音分享卡片预览" width="96%">
+      <br>
+      <strong>抖音分享卡片</strong>
+    </td>
+  </tr>
+</table>
 
-## 功能
+<details>
+  <summary><strong>Bilibili 完整 JSON 示例</strong></summary>
 
-- 解析 Bilibili 与抖音公开视频链接
-- 自动过滤并识别输入中的有效链接
-- 返回统一字段结构，便于前端或脚本接入
-- 提供 Bilibili / Douyin 分享卡片 SVG 接口
-- 内置 Swagger 文档，启动后可直接访问 `/docs`
-- 保留项目署名 `Cortex by Ransen1337-star`
+```json
+{
+  "product": "Cortex",
+  "platform": "bilibili",
+  "input_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
+  "canonical_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
+  "video_id": "BV15kVJzYE5N",
+  "title": "《消失的青年》：面对焦虑，我们依然还有选择",
+  "description": "在社交媒体上，别人的生活永远精彩，自己的生活却布满雷区。从育儿、到读书、到求职，从年龄到外貌，青年们的人生似乎正在被焦虑消除。\n \n2025年五四青年节到来之际，B站发布了短片《消失的青年》，希望大家在面对焦虑时，依然还有选择。",
+  "declaration": null,
+  "duration_seconds": 246.0,
+  "published_at": "2025-05-04T02:00:00Z",
+  "author": {
+    "name": "哔哩哔哩弹幕网",
+    "unique_id": "8047632",
+    "sec_uid": null,
+    "profile_url": "https://space.bilibili.com/8047632",
+    "avatar_url": "https://i0.hdslb.com/bfs/face/0c84b9f4ad546d3f20324809d45fc439a2a8ddab.jpg",
+    "signature": "哔哩哔哩 干杯  ( ゜- ゜)つロ",
+    "follower_count": 4027756,
+    "total_favorited": null,
+    "verification": {
+      "is_verified": true,
+      "theme": "blue",
+      "text": "bilibili机构认证 哔哩哔哩弹幕网官方账号"
+    }
+  },
+  "metrics": {
+    "play_count": 6414979,
+    "danmaku_count": 321,
+    "comment_count": 1412,
+    "like_count": 56590,
+    "share_count": 13266,
+    "favorite_count": 39374,
+    "coin_count": 24380
+  },
+  "video_source": {
+    "url": "https://upos-sz-estgcos.bilivideo.com/upgcxcode/17/80/29778248017/29778248017-1-192.mp4?e=ig8euxZM2rNcNbR17zdVhwdlhWRahwdVhoNvNC8BqJIzNbfq9rVEuxTEnE8L5F6VnEsSTx0vkX8fqJeYTj_lta53NCM=&gen=playurlv3&os=estgcos&mid=0&uipk=5&trid=c79f4a3276484807b8078bb934b681dh&nbs=1&og=cos&oi=665489043&platform=html5&deadline=1781025430&upsig=543e05de07ab56a9a49ea7f9ac68d2eb&uparams=e,gen,os,mid,uipk,trid,nbs,og,oi,platform,deadline&bvc=vod&nettype=0&bw=941907&lrs=-1&buvid=&build=0&dl=0&f=h_0_0&agrr=0&orderid=0,1",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    },
+    "source_mode": "single_file",
+    "audio_url": null,
+    "format_id": "html5-durl-64",
+    "quality": "720P 高清",
+    "container": "mp4",
+    "width": 1280,
+    "height": 720,
+    "fps": null
+  },
+  "cover_source": {
+    "url": "https://i1.hdslb.com/bfs/archive/d6f84751ef91dacee0aacc64e7d6f0bd35ae1b8f.jpg",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    }
+  }
+}
+```
+</details>
 
-## 支持的链接
+<details>
+  <summary><strong>抖音完整 JSON 示例</strong></summary>
 
-- Bilibili 解析示例只使用 `https://www.bilibili.com/video/BV15kVJzYE5N/`
-- 抖音解析示例只使用 `https://www.iesdouyin.com/share/video/7634486870264597775/`
-- 建议传入完整公开链接，服务会先做基础过滤，再进入对应平台解析流程
+```json
+{
+  "product": "Cortex",
+  "platform": "douyin",
+  "input_url": "https://www.iesdouyin.com/share/video/7634486870264597775/",
+  "canonical_url": "https://www.douyin.com/video/7634486870264597775",
+  "video_id": "7634486870264597775",
+  "title": "抖音首发 | Google Cloud Next 26 开幕主题演讲：智能体云 The Agentic Cloud （视频由Google Cloud授权发布）",
+  "description": "抖音首发 | Google Cloud Next 26 开幕主题演讲：智能体云 The Agentic Cloud （视频由Google Cloud授权发布）\n #抖音前沿科技首发计划#Google#GoogleCloudNext#AI新星计划#前沿科技趋势发布月",
+  "declaration": null,
+  "duration_seconds": 5941.611,
+  "published_at": "2026-04-30T09:48:24Z",
+  "author": {
+    "name": "抖音精选官方账号",
+    "unique_id": "48751955702",
+    "sec_uid": "MS4wLjABAAAApksOkI0F7EMtId8CEunyMrlPTWGpOTDuqdlZ8VmCqcQXq7p_tDdUtFB_rLV-rqez",
+    "profile_url": "https://www.douyin.com/user/MS4wLjABAAAApksOkI0F7EMtId8CEunyMrlPTWGpOTDuqdlZ8VmCqcQXq7p_tDdUtFB_rLV-rqez",
+    "avatar_url": "https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_c0e5aad3548629d5e69f3104afa86d12.jpeg?from=327834062",
+    "signature": "官方邮箱：douyinjingxuan@bytedance.com\n直播回放：均在主页【节目】板块哦",
+    "follower_count": 1148000,
+    "total_favorited": 84058107,
+    "verification": {
+      "is_verified": true,
+      "theme": "red",
+      "text": "抖音精选官方账号"
+    }
+  },
+  "metrics": {
+    "play_count": null,
+    "danmaku_count": null,
+    "comment_count": 649,
+    "like_count": 12000,
+    "share_count": 499,
+    "favorite_count": 1399,
+    "coin_count": null
+  },
+  "video_source": {
+    "url": "https://v99-coldx.douyinvod.com/9112143df5533d34c56571e294724daf/6a2853bc/video/tos/cn/tos-cn-ve-15/owhTIabfRGAcKSXiXkLfB7TXDBZAWCI5EJeCzI/?a=1128&ch=0&cr=0&dr=0&cd=0%7C0%7C0%7C0&cv=1&br=649&bt=649&cs=0&ds=3&ft=KGkhUyqfRR0syrC3-Dy2Nc0iPMgzbL8EKWRU_49fS~wSNv7TGW&mime_type=video_mp4&qs=0&rc=NzVlODw7PDtoOzVlZmlnN0BpanA4bnk5cnRsOjMzNGkzM0AwLmAyMi5hXzIxMDIuLTVhYSNhZmVzMmQ0MW1hLS1kLWFzcw%3D%3D&btag=80010e000b8001&cquery=100y&dy_q=1781018231&feature_id=f5241e7604dff1d9d6c943fd20bd51a2&l=20260609231711E0D17627A5D04E6AFB66",
+    "request_headers": null,
+    "source_mode": "single_file",
+    "audio_url": null,
+    "format_id": "douyin-play",
+    "quality": "720p",
+    "container": "mp4",
+    "width": 1920,
+    "height": 1080,
+    "fps": null
+  },
+  "cover_source": {
+    "url": "https://p11-sign.douyinpic.com/tos-cn-i-dy/ba28e7f300e0425386c18de416fd2484~tplv-dy-resize-walign-adapt-aq:540:q75.jpeg?lk3s=138a59ce&x-expires=1782226800&x-signature=vGXcIpLffj1kiXRq3jssYGQL6Uo%3D&from=327834062&s=PackSourceEnum_DOUYIN_REFLOW&se=false&sc=cover&biz_tag=aweme_video&l=2026060923171006F4A6782875E3D29F5D",
+    "request_headers": null
+  }
+}
+```
+</details>
+
+快照文件：
+
+- [main/assets/docs/readme-bilibili-response.json](main/assets/docs/readme-bilibili-response.json)
+- [main/assets/docs/readme-douyin-response.json](main/assets/docs/readme-douyin-response.json)
 
 ## 快速开始
 
@@ -82,187 +208,65 @@ http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/openapi.json
 ```
 
-## 接口示例
-
-健康检查：
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-解析 Bilibili：
-
-```bash
-curl "http://127.0.0.1:8000/api/v1/bilibili/video-analysis?url=https%3A%2F%2Fwww.bilibili.com%2Fvideo%2FBV15kVJzYE5N%2F"
-```
-
-解析抖音：
-
-```bash
-curl "http://127.0.0.1:8000/api/v1/douyin/video-analysis?url=https%3A%2F%2Fwww.iesdouyin.com%2Fshare%2Fvideo%2F7634486870264597775%2F"
-```
-
-生成分享卡片：
-
-```bash
-curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bilibili.com%2Fvideo%2FBV15kVJzYE5N%2F" -o share-card.svg
-```
-
-## Card 预览
-
-下面这两张是仓库内置的分享卡片静态预览图：
-
-<p align="center">
-  <img src="main/assets/readme-bilibili-card.svg" alt="Bilibili 分享卡片预览" width="48%">
-  <img src="main/assets/readme-douyin-card.svg" alt="Douyin 分享卡片预览" width="48%">
-</p>
-
-实际卡片接口：
+## 示例接口
 
 ```text
+/api/v1/bilibili/video-analysis?url=https://www.bilibili.com/video/BV15kVJzYE5N/
+/api/v1/douyin/video-analysis?url=https://www.iesdouyin.com/share/video/7634486870264597775/
 /api/v1/bilibili/share-card?url=https://www.bilibili.com/video/BV15kVJzYE5N/
-/api/v1/douyin/share-card?url=https://www.iesdouyin.com/share/video/7634486870264597775/
+/api/v1/bilibili/share-card?url=https://www.bilibili.com/video/BV15kVJzYE5N/&mode=svg
+/api/v1/douyin/share-card?url=https://www.iesdouyin.com/share/video/7634486870264597775/&mode=png&preset=performance
+/api/v1/douyin/share-card?url=https://www.iesdouyin.com/share/video/7634486870264597775/&mode=png&preset=quality
 ```
 
-## 返回数据示例
-
-<details>
-<summary>Bilibili 返回 JSON</summary>
-
-```json
-{
-  "product": "Cortex",
-  "platform": "bilibili",
-  "input_url": "https://www.bilibili.com/video/BV15kVJzYE5N/",
-  "canonical_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
-  "video_id": "BV15kVJzYE5N",
-  "title": "Bilibili Sample",
-  "description": "Public video metadata extracted from Bilibili.",
-  "duration_seconds": 291.0,
-  "published_at": "2026-06-05T10:05:28Z",
-  "metrics": {
-    "play_count": 5030049,
-    "danmaku_count": 6964,
-    "comment_count": 23141,
-    "like_count": 213529,
-    "share_count": 17775,
-    "favorite_count": 25971,
-    "coin_count": 17036
-  },
-  "video_source": {
-    "url": "https://example.com/bilibili-video.mp4",
-    "request_headers": {
-      "User-Agent": "Mozilla/5.0"
-    },
-    "source_mode": "single_file",
-    "format_id": "html5-durl-64",
-    "quality": "720P",
-    "container": "mp4",
-    "width": 1280,
-    "height": 720
-  },
-  "cover_source": {
-    "url": "https://example.com/bilibili-cover.jpg",
-    "request_headers": {
-      "User-Agent": "Mozilla/5.0"
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary>抖音返回 JSON</summary>
-
-```json
-{
-  "product": "Cortex",
-  "platform": "douyin",
-  "input_url": "https://www.iesdouyin.com/share/video/7634486870264597775/",
-  "canonical_url": "https://www.douyin.com/video/7634486870264597775",
-  "video_id": "7634486870264597775",
-  "title": "Douyin Sample",
-  "description": "Public video metadata extracted from Douyin.",
-  "duration_seconds": 17.267,
-  "published_at": "2026-02-18T13:00:00Z",
-  "author": {
-    "name": "Douyin Creator",
-    "unique_id": "1234567890",
-    "sec_uid": "MS4wLjABAAAAexample-sec-uid",
-    "profile_url": "https://www.douyin.com/user/MS4wLjABAAAAexample-sec-uid",
-    "avatar_url": "https://example.com/avatar.jpeg",
-    "signature": "Example creator signature",
-    "follower_count": 1147000,
-    "total_favorited": 83954608,
-    "verification": {
-      "is_verified": true,
-      "theme": "red",
-      "text": "Example official verification"
-    }
-  },
-  "metrics": {
-    "comment_count": 238,
-    "like_count": 7171,
-    "share_count": 159,
-    "favorite_count": 255
-  },
-  "video_source": {
-    "url": "https://example.com/douyin-video.mp4",
-    "source_mode": "single_file",
-    "format_id": "douyin-play",
-    "quality": "720p",
-    "container": "mp4",
-    "width": 1080,
-    "height": 1920
-  },
-  "cover_source": {
-    "url": "https://example.com/douyin-cover.jpeg"
-  }
-}
-```
-
-</details>
-
-## 目录结构
+## 项目结构
 
 ```text
 .
+|-- LICENSE
+|-- LICENSE.zh-CN.md
+|-- NOTICE
 |-- README.md
 |-- README.en.md
 |-- README.zh-CN.md
+|-- TRADEMARKS.md
 |-- main/
 |   |-- api/
 |   |-- assets/
+|   |   |-- badges/
+|   |   |-- branding/
+|   |   `-- docs/
 |   |-- core/
 |   |-- services/
-|   |-- tests/
 |   |-- requirements.txt
 |   `-- __init__.py
 `-- start.py
 ```
 
-- `api/` 放 FastAPI 路由与示例返回
-- `core/` 放品牌信息与运行时配置辅助代码
-- `services/` 放平台解析器、共享模型、工具函数与分享卡片渲染
-- `tests/` 放 API 与解析器回归测试
-
 ## 说明
 
-- 平台页面结构变动时，解析逻辑可能需要同步调整
-- 抖音部分公开页面字段存在限制，个别指标可能受上游返回影响
+> #### <img src="main/assets/branding/callout-important.svg" alt="" width="18" align="absmiddle"> 重要
+>
+> - 仓库内示例链接固定为 `https://www.bilibili.com/video/BV15kVJzYE5N/`
+> - 仓库内示例链接固定为 `https://www.iesdouyin.com/share/video/7634486870264597775/`
+> - 分享卡片接口同时支持原始 `svg` 和渲染后的 `png`
+> - PNG 预设提供 `performance`、`balanced`、`quality` 三档
+> - 抖音公开分享页可能无法稳定拿到真实播放量
+
+## 其他文档
+
+- 总览: [README.md](README.md)
+- English: [README.en.md](README.en.md)
 
 ## 协议
 
-Cortex 采用 `PolyForm Noncommercial 1.0.0` 源码可见许可。
+Cortex 采用 `PolyForm Noncommercial 1.0.0` 源码开放协议。
 
-- 英文原文：[LICENSE](LICENSE)
-- 中文参考：[LICENSE.zh-CN.md](LICENSE.zh-CN.md)
-- 未经单独授权，不允许商用
-- 转载原版或修改版时，必须保留 `Cortex by Ransen1337-star` 署名
-- 必须一并保留仓库根目录中的 [NOTICE](NOTICE) 要求通知
-- `Cortex` 名称与 logo 不随软件许可一起授权，详见 [TRADEMARKS.md](TRADEMARKS.md)
+- [LICENSE](LICENSE)
+- [LICENSE.zh-CN.md](LICENSE.zh-CN.md)
+- [NOTICE](NOTICE)
+- [TRADEMARKS.md](TRADEMARKS.md)
 
 ---
 
-❤️‍🩹 感谢您使用 Cortex，Built with ❤️ by Ransen1337-star
+❤️‍🩹感谢您使用 Cortex，Built with ❤️ by Ransen1337-star

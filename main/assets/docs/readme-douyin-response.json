@@ -1,0 +1,52 @@
+{
+  "product": "Cortex",
+  "platform": "douyin",
+  "input_url": "https://www.iesdouyin.com/share/video/7634486870264597775/",
+  "canonical_url": "https://www.douyin.com/video/7634486870264597775",
+  "video_id": "7634486870264597775",
+  "title": "抖音首发 | Google Cloud Next 26 开幕主题演讲：智能体云 The Agentic Cloud （视频由Google Cloud授权发布）",
+  "description": "抖音首发 | Google Cloud Next 26 开幕主题演讲：智能体云 The Agentic Cloud （视频由Google Cloud授权发布）\n #抖音前沿科技首发计划#Google#GoogleCloudNext#AI新星计划#前沿科技趋势发布月",
+  "declaration": null,
+  "duration_seconds": 5941.611,
+  "published_at": "2026-04-30T09:48:24Z",
+  "author": {
+    "name": "抖音精选官方账号",
+    "unique_id": "48751955702",
+    "sec_uid": "MS4wLjABAAAApksOkI0F7EMtId8CEunyMrlPTWGpOTDuqdlZ8VmCqcQXq7p_tDdUtFB_rLV-rqez",
+    "profile_url": "https://www.douyin.com/user/MS4wLjABAAAApksOkI0F7EMtId8CEunyMrlPTWGpOTDuqdlZ8VmCqcQXq7p_tDdUtFB_rLV-rqez",
+    "avatar_url": "https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_c0e5aad3548629d5e69f3104afa86d12.jpeg?from=327834062",
+    "signature": "官方邮箱：douyinjingxuan@bytedance.com\n直播回放：均在主页【节目】板块哦",
+    "follower_count": 1148000,
+    "total_favorited": 84058107,
+    "verification": {
+      "is_verified": true,
+      "theme": "red",
+      "text": "抖音精选官方账号"
+    }
+  },
+  "metrics": {
+    "play_count": null,
+    "danmaku_count": null,
+    "comment_count": 649,
+    "like_count": 12000,
+    "share_count": 499,
+    "favorite_count": 1399,
+    "coin_count": null
+  },
+  "video_source": {
+    "url": "https://v99-coldx.douyinvod.com/9112143df5533d34c56571e294724daf/6a2853bc/video/tos/cn/tos-cn-ve-15/owhTIabfRGAcKSXiXkLfB7TXDBZAWCI5EJeCzI/?a=1128&ch=0&cr=0&dr=0&cd=0%7C0%7C0%7C0&cv=1&br=649&bt=649&cs=0&ds=3&ft=KGkhUyqfRR0syrC3-Dy2Nc0iPMgzbL8EKWRU_49fS~wSNv7TGW&mime_type=video_mp4&qs=0&rc=NzVlODw7PDtoOzVlZmlnN0BpanA4bnk5cnRsOjMzNGkzM0AwLmAyMi5hXzIxMDIuLTVhYSNhZmVzMmQ0MW1hLS1kLWFzcw%3D%3D&btag=80010e000b8001&cquery=100y&dy_q=1781018231&feature_id=f5241e7604dff1d9d6c943fd20bd51a2&l=20260609231711E0D17627A5D04E6AFB66",
+    "request_headers": null,
+    "source_mode": "single_file",
+    "audio_url": null,
+    "format_id": "douyin-play",
+    "quality": "720p",
+    "container": "mp4",
+    "width": 1920,
+    "height": 1080,
+    "fps": null
+  },
+  "cover_source": {
+    "url": "https://p11-sign.douyinpic.com/tos-cn-i-dy/ba28e7f300e0425386c18de416fd2484~tplv-dy-resize-walign-adapt-aq:540:q75.jpeg?lk3s=138a59ce&x-expires=1782226800&x-signature=vGXcIpLffj1kiXRq3jssYGQL6Uo%3D&from=327834062&s=PackSourceEnum_DOUYIN_REFLOW&se=false&sc=cover&biz_tag=aweme_video&l=2026060923171006F4A6782875E3D29F5D",
+    "request_headers": null
+  }
+}

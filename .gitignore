@@ -21,7 +21,8 @@ build/
 .idea/
 .vscode/
 .playwright-cli/
-*-card.svg
+main/assets/_debug-*
+main/assets/_tmp-*
 .DS_Store
 Thumbs.db
 Desktop.ini

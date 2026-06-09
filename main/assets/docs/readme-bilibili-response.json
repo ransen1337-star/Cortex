@@ -1,0 +1,56 @@
+{
+  "product": "Cortex",
+  "platform": "bilibili",
+  "input_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
+  "canonical_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
+  "video_id": "BV15kVJzYE5N",
+  "title": "《消失的青年》：面对焦虑，我们依然还有选择",
+  "description": "在社交媒体上，别人的生活永远精彩，自己的生活却布满雷区。从育儿、到读书、到求职，从年龄到外貌，青年们的人生似乎正在被焦虑消除。\n \n2025年五四青年节到来之际，B站发布了短片《消失的青年》，希望大家在面对焦虑时，依然还有选择。",
+  "declaration": null,
+  "duration_seconds": 246.0,
+  "published_at": "2025-05-04T02:00:00Z",
+  "author": {
+    "name": "哔哩哔哩弹幕网",
+    "unique_id": "8047632",
+    "sec_uid": null,
+    "profile_url": "https://space.bilibili.com/8047632",
+    "avatar_url": "https://i0.hdslb.com/bfs/face/0c84b9f4ad546d3f20324809d45fc439a2a8ddab.jpg",
+    "signature": "哔哩哔哩 干杯  ( ゜- ゜)つロ",
+    "follower_count": 4027756,
+    "total_favorited": null,
+    "verification": {
+      "is_verified": true,
+      "theme": "blue",
+      "text": "bilibili机构认证 哔哩哔哩弹幕网官方账号"
+    }
+  },
+  "metrics": {
+    "play_count": 6414979,
+    "danmaku_count": 321,
+    "comment_count": 1412,
+    "like_count": 56590,
+    "share_count": 13266,
+    "favorite_count": 39374,
+    "coin_count": 24380
+  },
+  "video_source": {
+    "url": "https://upos-sz-estgcos.bilivideo.com/upgcxcode/17/80/29778248017/29778248017-1-192.mp4?e=ig8euxZM2rNcNbR17zdVhwdlhWRahwdVhoNvNC8BqJIzNbfq9rVEuxTEnE8L5F6VnEsSTx0vkX8fqJeYTj_lta53NCM=&gen=playurlv3&os=estgcos&mid=0&uipk=5&trid=c79f4a3276484807b8078bb934b681dh&nbs=1&og=cos&oi=665489043&platform=html5&deadline=1781025430&upsig=543e05de07ab56a9a49ea7f9ac68d2eb&uparams=e,gen,os,mid,uipk,trid,nbs,og,oi,platform,deadline&bvc=vod&nettype=0&bw=941907&lrs=-1&buvid=&build=0&dl=0&f=h_0_0&agrr=0&orderid=0,1",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    },
+    "source_mode": "single_file",
+    "audio_url": null,
+    "format_id": "html5-durl-64",
+    "quality": "720P 高清",
+    "container": "mp4",
+    "width": 1280,
+    "height": 720,
+    "fps": null
+  },
+  "cover_source": {
+    "url": "https://i1.hdslb.com/bfs/archive/d6f84751ef91dacee0aacc64e7d6f0bd35ae1b8f.jpg",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    }
+  }
+}

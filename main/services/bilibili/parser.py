@@ -1,6 +1,9 @@
+import base64
 from dataclasses import dataclass
+from functools import lru_cache
 from html import escape
 import json
+from pathlib import Path
 import re
 from typing import Any, Protocol
 from urllib.parse import urlparse
@@ -10,6 +13,8 @@ from urllib.parse import urlunsplit
 import httpx
 from main.services.models import SourceFile
 from main.services.models import VideoAnalysisResponse
+from main.services.models import VideoAuthor
+from main.services.models import VideoAuthorVerification
 from main.services.models import VideoMetrics
 from main.services.models import VideoSourceFile
 from main.services.share_card import ShareCardAuthor
@@ -33,6 +38,8 @@ HTTP_CLIENT = create_http_client(30)
 EXTRACT_URL_PATTERN = re.compile(r"https?://[^\s<>'\"）)】]+")
 PAGE_STATE_PATTERN = re.compile(r"window\.__INITIAL_STATE__\s*=\s*(\{.*?\});", re.S)
 TRAILING_URL_PUNCTUATION = ".,;!?，。；！？、)]）】>"
+ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets"
+BILIBILI_LEVEL_BADGE_DIR = ASSETS_DIR / "badges"
 
 
 @dataclass(frozen=True)
@@ -260,6 +267,8 @@ def build_response(
 ) -> VideoAnalysisResponse:
     video_data = page_state.get("videoData") if isinstance(page_state.get("videoData"), dict) else {}
     stat = video_data.get("stat") if isinstance(video_data.get("stat"), dict) else {}
+    up_data = page_state.get("upData") if isinstance(page_state.get("upData"), dict) else {}
+    owner_data = video_data.get("owner") if isinstance(video_data.get("owner"), dict) else {}
     return VideoAnalysisResponse(
         product="Cortex",
         platform="bilibili",
@@ -271,6 +280,7 @@ def build_response(
         declaration=extract_bilibili_declaration(page_state),
         duration_seconds=coerce_float(video_data.get("duration")) or coerce_float(media_info.get("duration")),
         published_at=build_published_at(video_data.get("pubdate") or media_info.get("timestamp")),
+        author=build_bilibili_author(up_data, owner_data),
         metrics=build_metrics(stat),
         video_source=build_video_source(page_state, media_info),
         cover_source=build_cover_source(video_data, media_info),
@@ -287,6 +297,54 @@ def build_metrics(stat: dict[str, Any]) -> VideoMetrics:
         favorite_count=coerce_int(stat.get("favorite")),
         coin_count=coerce_int(stat.get("coin")),
     )
+
+
+def build_bilibili_author(up_data: dict[str, Any], owner_data: dict[str, Any]) -> VideoAuthor | None:
+    official_verify = resolve_official_verify_badge(up_data, owner_data)
+    verification = build_bilibili_author_verification(official_verify)
+    unique_id = coerce_string(up_data.get("mid")) or coerce_string(owner_data.get("mid"))
+    profile_url = build_bilibili_profile_url(unique_id)
+    author = VideoAuthor(
+        name=coerce_string(up_data.get("name")) or coerce_string(owner_data.get("name")),
+        unique_id=unique_id,
+        sec_uid=None,
+        profile_url=profile_url,
+        avatar_url=coerce_string(up_data.get("face")) or coerce_string(owner_data.get("face")),
+        signature=coerce_string(up_data.get("sign")) or coerce_string(owner_data.get("sign")),
+        follower_count=coerce_int(up_data.get("fans")),
+        total_favorited=None,
+        verification=verification,
+    )
+    if not any(
+        (
+            author.name,
+            author.unique_id,
+            author.profile_url,
+            author.avatar_url,
+            author.signature,
+            author.follower_count,
+            author.total_favorited,
+            author.verification,
+        )
+    ):
+        return None
+    return author
+
+
+def build_bilibili_author_verification(official_verify: OfficialVerifyBadge | None) -> VideoAuthorVerification | None:
+    if official_verify is None:
+        return None
+    return VideoAuthorVerification(
+        is_verified=True,
+        theme=resolve_bilibili_verification_theme(official_verify.type),
+        text=build_official_verify_text(official_verify),
+    )
+
+
+def build_bilibili_profile_url(unique_id: str | None) -> str | None:
+    if not unique_id:
+        return None
+    return f"https://space.bilibili.com/{unique_id}"
 
 
 def extract_bilibili_declaration(page_state: dict[str, Any]) -> str | None:
@@ -559,27 +617,25 @@ def resolve_official_verify_badge(up_data: dict[str, Any], owner_data: dict[str,
 
 
 def build_bilibili_level_badge_markup(level: int | None) -> str:
-    font_url = "https://s1.hdslb.com/bfs/svg-next/font/2025-10-27/freshspace-zpjpp3aqht.ttf"
-    codepoint = {
-        0: 0xE042,
-        1: 0xE043,
-        2: 0xE044,
-        3: 0xE045,
-        4: 0xE046,
-        5: 0xE047,
-        6: 0xE048,
-    }.get(level)
-    if codepoint is None:
+    if level is None or level < 0 or level > 6:
         return ""
-    return f"""<style>
-@font-face {{
-  font-family: "BilibiliLevelIcon";
-  src: url("{font_url}") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-}}
-</style>
-<text x="__BADGE_X__" y="__BADGE_Y__" fill="#000000" font-family="BilibiliLevelIcon" font-size="34">{chr(codepoint)}</text>"""
+    badge_data_uri = load_bilibili_level_badge_data_uri(level)
+    if badge_data_uri is None:
+        return ""
+    return (
+        '<g transform="translate(__BADGE_X__ __BADGE_Y__)">'
+        '<image href="{href}" xlink:href="{href}" x="0" y="-18" width="44" height="23" preserveAspectRatio="xMidYMid meet" />'
+        "</g>"
+    ).format(href=badge_data_uri)
+
+
+@lru_cache(maxsize=7)
+def load_bilibili_level_badge_data_uri(level: int) -> str | None:
+    badge_path = BILIBILI_LEVEL_BADGE_DIR / f"bilibili-level-{level}.png"
+    if not badge_path.exists():
+        return None
+    encoded_bytes = base64.b64encode(badge_path.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{encoded_bytes}"
 
 
 def build_bilibili_official_badge_icon_markup(official_verify: OfficialVerifyBadge | None) -> str:
@@ -601,6 +657,12 @@ def build_official_verify_text(official_verify: OfficialVerifyBadge) -> str:
     if not title:
         return prefix
     return f"{prefix} {title}"
+
+
+def resolve_bilibili_verification_theme(official_type: int) -> str:
+    if official_type == 1:
+        return "blue"
+    return "gold"
 
 
 def resolve_official_badge_color(official_type: int) -> str:

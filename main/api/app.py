@@ -1,6 +1,7 @@
 import os
 from typing import Any
 from collections.abc import Callable
+from urllib.parse import quote_plus
 from urllib.parse import unquote_plus
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -8,8 +9,8 @@ from fastapi.responses import RedirectResponse, Response
 
 from main.api.examples import BILIBILI_VIDEO_ANALYSIS_EXAMPLES
 from main.api.examples import DOUYIN_VIDEO_ANALYSIS_EXAMPLES
+from main.api.examples import build_image_example_response
 from main.api.examples import build_json_example_response
-from main.api.examples import build_svg_example_response
 from main.core.branding import PROJECT_DESCRIPTION
 from main.core.branding import PROJECT_NAME
 from main.services import BilibiliExtractionError
@@ -21,6 +22,8 @@ from main.services import InvalidDouyinUrlError
 from main.services import VideoAnalysisResponse
 from main.services.share_card import DEFAULT_CARD_FONT_STACK
 from main.services.share_card import set_share_card_font_stack
+from main.services.share_card.rasterizer import ShareCardRenderError
+from main.services.share_card.rasterizer import render_share_card_image
 from main.services.utils import BILIBILI_ASSET_REFERER
 from main.services.utils import DOUYIN_ASSET_REFERER
 from main.services.utils import build_remote_asset_request_headers
@@ -29,12 +32,13 @@ from main.services.utils import normalize_remote_asset_url
 
 
 APP_TITLE = PROJECT_NAME
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.5.0"
 SHARE_CARD_ASSET_PROXY_PATH = "/api/v1/share-card/assets"
 ASSET_PROXY_CLIENT = create_http_client(20)
 
 VideoService = BilibiliParserService | DouyinParserService
 AssetProxyFetcher = Callable[[str], tuple[bytes, str]]
+ShareCardRenderer = Callable[..., tuple[bytes, str]]
 
 
 def build_asset_proxy_request_headers(url: str) -> dict[str, str]:
@@ -58,12 +62,14 @@ def create_app(
     bilibili_service: BilibiliParserService | None = None,
     douyin_service: DouyinParserService | None = None,
     asset_proxy_fetcher: AssetProxyFetcher | None = None,
+    share_card_renderer: ShareCardRenderer | None = None,
 ) -> FastAPI:
     configure_share_card_fonts()
 
     bilibili_service = bilibili_service or BilibiliParserService()
     douyin_service = douyin_service or DouyinParserService()
     asset_proxy_fetcher = asset_proxy_fetcher or create_default_asset_proxy_fetcher()
+    share_card_renderer = share_card_renderer or render_share_card_image
 
     app = FastAPI(
         title=APP_TITLE,
@@ -91,6 +97,7 @@ def create_app(
         bilibili_service=bilibili_service,
         douyin_service=douyin_service,
         asset_proxy_fetcher=asset_proxy_fetcher,
+        share_card_renderer=share_card_renderer,
     )
     return app
 
@@ -110,6 +117,7 @@ def register_routes(
     bilibili_service: BilibiliParserService,
     douyin_service: DouyinParserService,
     asset_proxy_fetcher: AssetProxyFetcher,
+    share_card_renderer: ShareCardRenderer,
 ) -> None:
     @app.get("/", include_in_schema=False)
     def index() -> RedirectResponse:
@@ -140,7 +148,6 @@ def register_routes(
     @app.get(
         "/api/v1/video-analysis",
         response_model=VideoAnalysisResponse,
-        response_model_exclude_none=True,
         include_in_schema=False,
         tags=["Cortex"],
         summary="Analyze Video",
@@ -171,7 +178,6 @@ def register_routes(
     @app.get(
         "/api/v1/bilibili/video-analysis",
         response_model=VideoAnalysisResponse,
-        response_model_exclude_none=True,
         tags=["Bilibili Analysis"],
         summary="Analyze Bilibili Video",
         description="Return core metrics, a direct video source file, and a direct cover source file from a Bilibili video link.",
@@ -206,7 +212,6 @@ def register_routes(
     @app.get(
         "/api/v1/douyin/video-analysis",
         response_model=VideoAnalysisResponse,
-        response_model_exclude_none=True,
         tags=["Douyin Analysis"],
         summary="Analyze Douyin Video",
         description="Return core metrics, a direct video source file, and a direct cover source file from a Douyin video link.",
@@ -242,8 +247,8 @@ def register_routes(
         "/api/v1/bilibili/share-card",
         tags=["Share Card"],
         summary="Render Bilibili Share Card",
-        description="Render a horizontal Bilibili share card as SVG with author, title, metrics, duration, play count, and the Bilibili logo.",
-        responses={200: build_svg_example_response()},
+        description="Render a horizontal Bilibili share card as SVG or PNG. PNG mode supports performance, balanced, and quality presets.",
+        responses={200: build_image_example_response()},
     )
     def bilibili_share_card(
         request: Request,
@@ -255,25 +260,52 @@ def register_routes(
                 "https://b23.tv/xxxxxx",
             ],
         ),
+        mode: str | None = Query(
+            None,
+            description="Share-card output mode. Defaults to png when omitted",
+            pattern="^(svg|png)$",
+        ),
+        preset: str = Query(
+            "balanced",
+            description="PNG render preset. Only used when mode=png",
+            pattern="^(performance|balanced|quality)$",
+        ),
+        format: str | None = Query(
+            None,
+            description="Deprecated legacy share-card format alias",
+            pattern="^(svg|png|jpg|jpeg)$",
+            deprecated=True,
+        ),
     ) -> Response:
-        normalized_input = resolve_request_url_input(request, url)
+        normalized_input = resolve_request_url_input(
+            request,
+            url,
+            ignored_suffix_params=("mode", "preset", "format"),
+        )
         try:
             svg = bilibili_service.build_share_card_svg(
                 normalized_input,
-                asset_proxy_path=SHARE_CARD_ASSET_PROXY_PATH,
             )
-            return Response(content=svg, media_type="image/svg+xml")
+            image_bytes, media_type = share_card_renderer(
+                svg,
+                mode=mode,
+                png_preset=preset,
+                legacy_format=format,
+            )
+            return Response(content=image_bytes, media_type=media_type)
         except InvalidBilibiliUrlError as error:
             raise HTTPException(status_code=400, detail=error.message) from error
         except BilibiliExtractionError as error:
+            raise HTTPException(status_code=502, detail=error.message) from error
+        except ShareCardRenderError as error:
             raise HTTPException(status_code=502, detail=error.message) from error
 
     @app.get(
         "/api/v1/douyin/share-card",
         tags=["Share Card"],
         summary="Render Douyin Share Card",
-        description="Render a horizontal Douyin share card as SVG with author, title, tags, metrics, cover, and the Douyin logo.",
-        responses={200: build_svg_example_response()},
+        description="Render a horizontal Douyin share card as SVG or PNG. PNG mode supports performance, balanced, and quality presets.",
+        responses={200: build_image_example_response()},
     )
     def douyin_share_card(
         request: Request,
@@ -285,24 +317,74 @@ def register_routes(
                 "https://www.iesdouyin.com/share/video/7606942757253803610/",
             ],
         ),
+        mode: str | None = Query(
+            None,
+            description="Share-card output mode. Defaults to png when omitted",
+            pattern="^(svg|png)$",
+        ),
+        preset: str = Query(
+            "balanced",
+            description="PNG render preset. Only used when mode=png",
+            pattern="^(performance|balanced|quality)$",
+        ),
+        format: str | None = Query(
+            None,
+            description="Deprecated legacy share-card format alias",
+            pattern="^(svg|png|jpg|jpeg)$",
+            deprecated=True,
+        ),
     ) -> Response:
-        normalized_input = resolve_request_url_input(request, url)
+        normalized_input = resolve_request_url_input(
+            request,
+            url,
+            ignored_suffix_params=("mode", "preset", "format"),
+        )
         try:
             svg = douyin_service.build_share_card_svg(
                 normalized_input,
-                asset_proxy_path=SHARE_CARD_ASSET_PROXY_PATH,
             )
-            return Response(content=svg, media_type="image/svg+xml")
+            image_bytes, media_type = share_card_renderer(
+                svg,
+                mode=mode,
+                png_preset=preset,
+                legacy_format=format,
+            )
+            return Response(content=image_bytes, media_type=media_type)
         except InvalidDouyinUrlError as error:
             raise HTTPException(status_code=400, detail=error.message) from error
         except DouyinExtractionError as error:
             raise HTTPException(status_code=502, detail=error.message) from error
+        except ShareCardRenderError as error:
+            raise HTTPException(status_code=502, detail=error.message) from error
 
 
-def resolve_request_url_input(request: Request, url: str | None) -> str:
+def resolve_request_url_input(
+    request: Request,
+    url: str | None,
+    ignored_suffix_params: tuple[str, ...] = (),
+) -> str:
     raw_query = request.scope.get("query_string", b"").decode("utf-8", errors="ignore")
     if "url=" in raw_query:
-        return unquote_plus(raw_query.split("url=", 1)[1]).strip()
+        raw_value = raw_query.split("url=", 1)[1]
+        stripped_suffix = True
+        while stripped_suffix:
+            stripped_suffix = False
+            for param_name in ignored_suffix_params:
+                param_value = request.query_params.get(param_name)
+                if param_value is None:
+                    continue
+                suffix_candidates = (
+                    f"&{param_name}={quote_plus(param_value)}",
+                    f"&{param_name}={param_value}",
+                )
+                for suffix in suffix_candidates:
+                    if raw_value.endswith(suffix):
+                        raw_value = raw_value[: -len(suffix)]
+                        stripped_suffix = True
+                        break
+                if stripped_suffix:
+                    break
+        return unquote_plus(raw_value).strip()
     return (url or "").strip()
 
 

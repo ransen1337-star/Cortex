@@ -1,10 +1,11 @@
 <div align="center">
 
-<img src="main/assets/cortex-logo.svg" alt="Cortex logo" width="420">
+<img src="main/assets/branding/cortex-logo.svg" alt="Cortex logo" width="680">
 
 # Cortex
 
-**Cortex, a public source code project for Bilibili and Douyin video analysis**
+**Public Bilibili and Douyin video-analysis API source code**  
+**Bilibili 与抖音公开视频解析 API 源码项目**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -16,29 +17,193 @@
   <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/Pydantic-v2-E92063" alt="Pydantic">
-  <img src="https://img.shields.io/badge/Layout-start.py%20%2B%20main-0F766E" alt="Layout">
+  <img src="https://img.shields.io/badge/Output-JSON%20%2B%20SVG%2FPNG-2563EB" alt="Output">
 </p>
 
 </div>
 
 ## Overview
 
-Cortex is a compact FastAPI source code project for parsing public Bilibili and Douyin video links, returning normalized metadata, and rendering SVG share cards.
+Cortex is an API-only FastAPI project for public Bilibili and Douyin video analysis.
 
-The repository keeps the root intentionally clean:
+It provides:
 
-- `start.py` as the only startup entry
-- `main/` for source code, assets, tests, and runtime dependencies
-- `README.md`, `README.en.md`, and `README.zh-CN.md` as the only public docs at the root
+- one shared response schema for Bilibili and Douyin
+- URL filtering, normalization, and fixed example-link validation
+- direct author, video, and cover metadata extraction
+- share cards in `svg` or `png`, with `performance`, `balanced`, and `quality` PNG presets
+- a clean `main/` application layout with `start.py` as the only root entry
 
-## Readme
+## Shared Response Schema
 
-- English: [README.en.md](README.en.md)
-- 简体中文: [README.zh-CN.md](README.zh-CN.md)
+```json
+{
+  "product": "Cortex",
+  "platform": "bilibili | douyin",
+  "input_url": "string",
+  "canonical_url": "string",
+  "video_id": "string",
+  "title": "string",
+  "description": "string | null",
+  "declaration": "string | null",
+  "duration_seconds": 0.0,
+  "published_at": "ISO-8601 | null",
+  "author": {},
+  "metrics": {},
+  "video_source": {},
+  "cover_source": {}
+}
+```
+
+## Preview
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="main/assets/docs/readme-bilibili-card.png" alt="Bilibili share card preview" width="96%">
+      <br>
+      <strong>Bilibili Share Card</strong>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="main/assets/docs/readme-douyin-card.png" alt="Douyin share card preview" width="96%">
+      <br>
+      <strong>Douyin Share Card</strong>
+    </td>
+  </tr>
+</table>
+
+<details>
+  <summary><strong>Bilibili full JSON example</strong></summary>
+
+```json
+{
+  "product": "Cortex",
+  "platform": "bilibili",
+  "input_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
+  "canonical_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
+  "video_id": "BV15kVJzYE5N",
+  "title": "《消失的青年》：面对焦虑，我们依然还有选择",
+  "description": "在社交媒体上，别人的生活永远精彩，自己的生活却布满雷区。从育儿、到读书、到求职，从年龄到外貌，青年们的人生似乎正在被焦虑消除。\n \n2025年五四青年节到来之际，B站发布了短片《消失的青年》，希望大家在面对焦虑时，依然还有选择。",
+  "declaration": null,
+  "duration_seconds": 246.0,
+  "published_at": "2025-05-04T02:00:00Z",
+  "author": {
+    "name": "哔哩哔哩弹幕网",
+    "unique_id": "8047632",
+    "sec_uid": null,
+    "profile_url": "https://space.bilibili.com/8047632",
+    "avatar_url": "https://i0.hdslb.com/bfs/face/0c84b9f4ad546d3f20324809d45fc439a2a8ddab.jpg",
+    "signature": "哔哩哔哩 干杯  ( ゜- ゜)つロ",
+    "follower_count": 4027756,
+    "total_favorited": null,
+    "verification": {
+      "is_verified": true,
+      "theme": "blue",
+      "text": "bilibili机构认证 哔哩哔哩弹幕网官方账号"
+    }
+  },
+  "metrics": {
+    "play_count": 6414979,
+    "danmaku_count": 321,
+    "comment_count": 1412,
+    "like_count": 56590,
+    "share_count": 13266,
+    "favorite_count": 39374,
+    "coin_count": 24380
+  },
+  "video_source": {
+    "url": "https://upos-sz-estgcos.bilivideo.com/upgcxcode/17/80/29778248017/29778248017-1-192.mp4?e=ig8euxZM2rNcNbR17zdVhwdlhWRahwdVhoNvNC8BqJIzNbfq9rVEuxTEnE8L5F6VnEsSTx0vkX8fqJeYTj_lta53NCM=&gen=playurlv3&os=estgcos&mid=0&uipk=5&trid=c79f4a3276484807b8078bb934b681dh&nbs=1&og=cos&oi=665489043&platform=html5&deadline=1781025430&upsig=543e05de07ab56a9a49ea7f9ac68d2eb&uparams=e,gen,os,mid,uipk,trid,nbs,og,oi,platform,deadline&bvc=vod&nettype=0&bw=941907&lrs=-1&buvid=&build=0&dl=0&f=h_0_0&agrr=0&orderid=0,1",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    },
+    "source_mode": "single_file",
+    "audio_url": null,
+    "format_id": "html5-durl-64",
+    "quality": "720P 高清",
+    "container": "mp4",
+    "width": 1280,
+    "height": 720,
+    "fps": null
+  },
+  "cover_source": {
+    "url": "https://i1.hdslb.com/bfs/archive/d6f84751ef91dacee0aacc64e7d6f0bd35ae1b8f.jpg",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    }
+  }
+}
+```
+</details>
+
+<details>
+  <summary><strong>Douyin full JSON example</strong></summary>
+
+```json
+{
+  "product": "Cortex",
+  "platform": "douyin",
+  "input_url": "https://www.iesdouyin.com/share/video/7634486870264597775/",
+  "canonical_url": "https://www.douyin.com/video/7634486870264597775",
+  "video_id": "7634486870264597775",
+  "title": "抖音首发 | Google Cloud Next 26 开幕主题演讲：智能体云 The Agentic Cloud （视频由Google Cloud授权发布）",
+  "description": "抖音首发 | Google Cloud Next 26 开幕主题演讲：智能体云 The Agentic Cloud （视频由Google Cloud授权发布）\n #抖音前沿科技首发计划#Google#GoogleCloudNext#AI新星计划#前沿科技趋势发布月",
+  "declaration": null,
+  "duration_seconds": 5941.611,
+  "published_at": "2026-04-30T09:48:24Z",
+  "author": {
+    "name": "抖音精选官方账号",
+    "unique_id": "48751955702",
+    "sec_uid": "MS4wLjABAAAApksOkI0F7EMtId8CEunyMrlPTWGpOTDuqdlZ8VmCqcQXq7p_tDdUtFB_rLV-rqez",
+    "profile_url": "https://www.douyin.com/user/MS4wLjABAAAApksOkI0F7EMtId8CEunyMrlPTWGpOTDuqdlZ8VmCqcQXq7p_tDdUtFB_rLV-rqez",
+    "avatar_url": "https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_c0e5aad3548629d5e69f3104afa86d12.jpeg?from=327834062",
+    "signature": "官方邮箱：douyinjingxuan@bytedance.com\n直播回放：均在主页【节目】板块哦",
+    "follower_count": 1148000,
+    "total_favorited": 84058107,
+    "verification": {
+      "is_verified": true,
+      "theme": "red",
+      "text": "抖音精选官方账号"
+    }
+  },
+  "metrics": {
+    "play_count": null,
+    "danmaku_count": null,
+    "comment_count": 649,
+    "like_count": 12000,
+    "share_count": 499,
+    "favorite_count": 1399,
+    "coin_count": null
+  },
+  "video_source": {
+    "url": "https://v99-coldx.douyinvod.com/9112143df5533d34c56571e294724daf/6a2853bc/video/tos/cn/tos-cn-ve-15/owhTIabfRGAcKSXiXkLfB7TXDBZAWCI5EJeCzI/?a=1128&ch=0&cr=0&dr=0&cd=0%7C0%7C0%7C0&cv=1&br=649&bt=649&cs=0&ds=3&ft=KGkhUyqfRR0syrC3-Dy2Nc0iPMgzbL8EKWRU_49fS~wSNv7TGW&mime_type=video_mp4&qs=0&rc=NzVlODw7PDtoOzVlZmlnN0BpanA4bnk5cnRsOjMzNGkzM0AwLmAyMi5hXzIxMDIuLTVhYSNhZmVzMmQ0MW1hLS1kLWFzcw%3D%3D&btag=80010e000b8001&cquery=100y&dy_q=1781018231&feature_id=f5241e7604dff1d9d6c943fd20bd51a2&l=20260609231711E0D17627A5D04E6AFB66",
+    "request_headers": null,
+    "source_mode": "single_file",
+    "audio_url": null,
+    "format_id": "douyin-play",
+    "quality": "720p",
+    "container": "mp4",
+    "width": 1920,
+    "height": 1080,
+    "fps": null
+  },
+  "cover_source": {
+    "url": "https://p11-sign.douyinpic.com/tos-cn-i-dy/ba28e7f300e0425386c18de416fd2484~tplv-dy-resize-walign-adapt-aq:540:q75.jpeg?lk3s=138a59ce&x-expires=1782226800&x-signature=vGXcIpLffj1kiXRq3jssYGQL6Uo%3D&from=327834062&s=PackSourceEnum_DOUYIN_REFLOW&se=false&sc=cover&biz_tag=aweme_video&l=2026060923171006F4A6782875E3D29F5D",
+    "request_headers": null
+  }
+}
+```
+</details>
+
+Snapshot files:
+
+- [main/assets/docs/readme-bilibili-response.json](main/assets/docs/readme-bilibili-response.json)
+- [main/assets/docs/readme-douyin-response.json](main/assets/docs/readme-douyin-response.json)
 
 ## Quick Start
 
 ```bash
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install -r main/requirements.txt
 python start.py
 ```
@@ -51,131 +216,18 @@ http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/openapi.json
 ```
 
-## Card Preview
-
-Static preview assets for the built-in share-card layout:
-
-<p align="center">
-  <img src="main/assets/readme-bilibili-card.svg" alt="Bilibili share card preview" width="48%">
-  <img src="main/assets/readme-douyin-card.svg" alt="Douyin share card preview" width="48%">
-</p>
-
-Actual card endpoints:
+## Example Endpoints
 
 ```text
+/api/v1/bilibili/video-analysis?url=https://www.bilibili.com/video/BV15kVJzYE5N/
+/api/v1/douyin/video-analysis?url=https://www.iesdouyin.com/share/video/7634486870264597775/
 /api/v1/bilibili/share-card?url=https://www.bilibili.com/video/BV15kVJzYE5N/
-/api/v1/douyin/share-card?url=https://www.iesdouyin.com/share/video/7634486870264597775/
+/api/v1/bilibili/share-card?url=https://www.bilibili.com/video/BV15kVJzYE5N/&mode=svg
+/api/v1/douyin/share-card?url=https://www.iesdouyin.com/share/video/7634486870264597775/&mode=png&preset=performance
+/api/v1/douyin/share-card?url=https://www.iesdouyin.com/share/video/7634486870264597775/&mode=png&preset=quality
 ```
 
-## Response Preview
-
-<details>
-<summary>Bilibili JSON response</summary>
-
-```json
-{
-  "product": "Cortex",
-  "platform": "bilibili",
-  "input_url": "https://www.bilibili.com/video/BV15kVJzYE5N/",
-  "canonical_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
-  "video_id": "BV15kVJzYE5N",
-  "title": "Bilibili Sample",
-  "description": "Public video metadata extracted from Bilibili.",
-  "duration_seconds": 291.0,
-  "published_at": "2026-06-05T10:05:28Z",
-  "metrics": {
-    "play_count": 5030049,
-    "danmaku_count": 6964,
-    "comment_count": 23141,
-    "like_count": 213529,
-    "share_count": 17775,
-    "favorite_count": 25971,
-    "coin_count": 17036
-  },
-  "video_source": {
-    "url": "https://example.com/bilibili-video.mp4",
-    "request_headers": {
-      "User-Agent": "Mozilla/5.0"
-    },
-    "source_mode": "single_file",
-    "format_id": "html5-durl-64",
-    "quality": "720P",
-    "container": "mp4",
-    "width": 1280,
-    "height": 720
-  },
-  "cover_source": {
-    "url": "https://example.com/bilibili-cover.jpg",
-    "request_headers": {
-      "User-Agent": "Mozilla/5.0"
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary>Douyin JSON response</summary>
-
-```json
-{
-  "product": "Cortex",
-  "platform": "douyin",
-  "input_url": "https://www.iesdouyin.com/share/video/7634486870264597775/",
-  "canonical_url": "https://www.douyin.com/video/7634486870264597775",
-  "video_id": "7634486870264597775",
-  "title": "Douyin Sample",
-  "description": "Public video metadata extracted from Douyin.",
-  "duration_seconds": 17.267,
-  "published_at": "2026-02-18T13:00:00Z",
-  "author": {
-    "name": "Douyin Creator",
-    "unique_id": "1234567890",
-    "sec_uid": "MS4wLjABAAAAexample-sec-uid",
-    "profile_url": "https://www.douyin.com/user/MS4wLjABAAAAexample-sec-uid",
-    "avatar_url": "https://example.com/avatar.jpeg",
-    "signature": "Example creator signature",
-    "follower_count": 1147000,
-    "total_favorited": 83954608,
-    "verification": {
-      "is_verified": true,
-      "theme": "red",
-      "text": "Example official verification"
-    }
-  },
-  "metrics": {
-    "comment_count": 238,
-    "like_count": 7171,
-    "share_count": 159,
-    "favorite_count": 255
-  },
-  "video_source": {
-    "url": "https://example.com/douyin-video.mp4",
-    "source_mode": "single_file",
-    "format_id": "douyin-play",
-    "quality": "720p",
-    "container": "mp4",
-    "width": 1080,
-    "height": 1920
-  },
-  "cover_source": {
-    "url": "https://example.com/douyin-cover.jpeg"
-  }
-}
-```
-
-</details>
-
-> #### <img src="main/assets/callout-important.svg" alt="" width="18" align="absmiddle"> IMPORTANT
->
-> - Public links only
-> - Private or login-only content is not supported
-> - Douyin public pages may not expose a reliable real play count
->
-> - Attribution must remain as `Cortex by Ransen1337-star` when redistributing this source code
-
-## Structure
+## Project Structure
 
 ```text
 .
@@ -189,30 +241,40 @@ Actual card endpoints:
 |-- main/
 |   |-- api/
 |   |-- assets/
+|   |   |-- badges/
+|   |   |-- branding/
+|   |   `-- docs/
 |   |-- core/
 |   |-- services/
-|   |-- tests/
 |   |-- requirements.txt
 |   `-- __init__.py
 `-- start.py
 ```
 
-- `main/api/` keeps FastAPI routes and OpenAPI examples
-- `main/core/` keeps branding and runtime configuration helpers
-- `main/services/` keeps platform parsers, models, utilities, and share-card rendering
-- `main/tests/` keeps parser and API regression tests
+## Notes
+
+> #### <img src="main/assets/branding/callout-important.svg" alt="" width="18" align="absmiddle"> IMPORTANT
+>
+> - Repository examples are fixed to `https://www.bilibili.com/video/BV15kVJzYE5N/`
+> - Repository examples are fixed to `https://www.iesdouyin.com/share/video/7634486870264597775/`
+> - Share-card endpoints support both raw `svg` and rendered `png`
+> - PNG presets are `performance`, `balanced`, and `quality`
+> - Douyin public share pages may not expose a reliable real play count
+
+## Docs
+
+- English details: [README.en.md](README.en.md)
+- 中文说明: [README.zh-CN.md](README.zh-CN.md)
 
 ## License
 
 Cortex is source-available under `PolyForm Noncommercial 1.0.0`.
 
 - English license: [LICENSE](LICENSE)
-- Chinese reference: [LICENSE.zh-CN.md](LICENSE.zh-CN.md)
-- Commercial use is not allowed without separate permission
-- Redistributions and modified copies must keep attribution as `Cortex by Ransen1337-star`
-- Required notices in [NOTICE](NOTICE) must be preserved
-- The `Cortex` name and logo are not granted as trademark rights; see [TRADEMARKS.md](TRADEMARKS.md)
+- 中文参考: [LICENSE.zh-CN.md](LICENSE.zh-CN.md)
+- Required notices: [NOTICE](NOTICE)
+- Trademark notes: [TRADEMARKS.md](TRADEMARKS.md)
 
 ---
 
-❤️‍🩹 感谢您使用 Cortex，Built with ❤️ by Ransen1337-star
+❤️‍🩹感谢您使用 Cortex，Built with ❤️ by Ransen1337-star
