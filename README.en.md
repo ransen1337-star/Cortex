@@ -1,13 +1,13 @@
 <div align="center">
 
-<img src="assets/cortex-logo.svg" alt="Cortex logo" width="240">
+<img src="main/assets/cortex-logo.svg" alt="Cortex logo" width="240">
 
 # Cortex
 
 **Cortex, a lightweight public source code project for Bilibili and Douyin video analysis**
 
 <p>
-  <a href="README.en.md"><strong>English</strong></a>
+  <a href="README.md"><strong>Overview</strong></a>
   &nbsp;|&nbsp;
   <a href="README.zh-CN.md"><strong>简体中文</strong></a>
 </p>
@@ -28,19 +28,24 @@ Cortex publishes source code for parsing public video links and returning normal
 
 The repository stays intentionally compact: `start.py` remains at the root, while all source code, assets, docs, and dependencies live inside `main/`.
 
-> #### <img src="assets/callout-important.svg" alt="" width="18" align="absmiddle"> IMPORTANT
+## Readme
+
+- Overview: [README.md](README.md)
+- 简体中文: [README.zh-CN.md](README.zh-CN.md)
+
+> #### <img src="main/assets/callout-important.svg" alt="" width="18" align="absmiddle"> IMPORTANT
 >
 > - This project is for public-link analysis only
 > - Private content and login-only content are out of scope
 > - Public Douyin share pages may not expose a reliable real play count
 > - If you ship this publicly, add rate limits, caching, logs, and source restrictions
 
-> #### <img src="assets/callout-warning.svg" alt="" width="18" align="absmiddle"> WARNING
+> #### <img src="main/assets/callout-warning.svg" alt="" width="18" align="absmiddle"> WARNING
 >
 > - Public platform markup can change at any time
 > - Upstream rate limits, signed requests, or expired media may temporarily affect field quality
 
-> #### <img src="assets/callout-tip.svg" alt="" width="18" align="absmiddle"> TIP
+> #### <img src="main/assets/callout-tip.svg" alt="" width="18" align="absmiddle"> TIP
 >
 > - Prefer full public URLs for best parser stability
 > - Use `/docs` after startup for live endpoint debugging
@@ -107,17 +112,19 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 ## Project Structure
 
 ```text
-main/
-|-- api/
-|-- assets/
-|-- core/
-|-- services/
-|-- tests/
+.
 |-- README.md
 |-- README.en.md
 |-- README.zh-CN.md
-|-- requirements.txt
-`-- __init__.py
+|-- main/
+|   |-- api/
+|   |-- assets/
+|   |-- core/
+|   |-- services/
+|   |-- tests/
+|   |-- requirements.txt
+|   `-- __init__.py
+`-- start.py
 ```
 
 - `api/` contains FastAPI routes and example response payloads
@@ -134,12 +141,12 @@ main/
 
 Cortex is source-available under `PolyForm Noncommercial 1.0.0`.
 
-- English license: [../LICENSE](../LICENSE)
-- Chinese reference: [../LICENSE.zh-CN.md](../LICENSE.zh-CN.md)
+- English license: [LICENSE](LICENSE)
+- Chinese reference: [LICENSE.zh-CN.md](LICENSE.zh-CN.md)
 - Commercial use is not allowed without separate permission
 - Redistributing original or modified copies must keep attribution as `Cortex by Ransen1337-star`
-- Required notices must be preserved from the repository root `NOTICE`
-- The `Cortex` name and logo are not licensed as trademarks; see `TRADEMARKS.md`
+- Required notices must be preserved from [NOTICE](NOTICE)
+- The `Cortex` name and logo are not licensed as trademarks; see [TRADEMARKS.md](TRADEMARKS.md)
 
 ---
 

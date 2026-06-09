@@ -1,15 +1,15 @@
 <div align="center">
 
-<img src="assets/cortex-logo.svg" alt="Cortex 标志" width="240">
+<img src="main/assets/cortex-logo.svg" alt="Cortex 标志" width="240">
 
 # Cortex
 
 **Cortex，面向 Bilibili 与抖音视频解析的轻量公开源码项目**
 
 <p>
-  <a href="README.en.md"><strong>English</strong></a>
+  <a href="README.md"><strong>概览</strong></a>
   &nbsp;|&nbsp;
-  <a href="README.zh-CN.md"><strong>简体中文</strong></a>
+  <a href="README.en.md"><strong>English</strong></a>
 </p>
 
 <p>
@@ -28,19 +28,24 @@ Cortex 用于公开源码方式提供视频解析能力，统一输出标题、�
 
 项目根目录只保留 `start.py`，其余源码、资源、文档与依赖统一放在 `main/` 中，结构更清晰，也更方便维护。
 
-> #### <img src="assets/callout-important.svg" alt="" width="18" align="absmiddle"> 重要说明
+## 文档
+
+- 概览：[README.md](README.md)
+- English：[README.en.md](README.en.md)
+
+> #### <img src="main/assets/callout-important.svg" alt="" width="18" align="absmiddle"> 重要说明
 >
 > - 本项目仅面向公开链接解析，不处理私有内容或登录态内容
 > - 使用者必须合规使用接口与抓取结果
 > - 抖音公开分享页当前可能无法稳定返回真实播放量
 > - 面向公众提供服务时，建议补充风控、缓存、日志与来源限制
 
-> #### <img src="assets/callout-warning.svg" alt="" width="18" align="absmiddle"> 警告
+> #### <img src="main/assets/callout-warning.svg" alt="" width="18" align="absmiddle"> 警告
 >
 > - 公开平台页面结构会变化，解析逻辑不能保证永久稳定
 > - 如果上游接口限流、签名变更或资源失效，部分字段可能短时异常
 
-> #### <img src="assets/callout-tip.svg" alt="" width="18" align="absmiddle"> 提示
+> #### <img src="main/assets/callout-tip.svg" alt="" width="18" align="absmiddle"> 提示
 >
 > - 推荐优先使用完整公开链接
 > - 启动后可直接访问 `/docs` 调试接口
@@ -107,17 +112,19 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 ## 目录结构
 
 ```text
-main/
-|-- api/
-|-- assets/
-|-- core/
-|-- services/
-|-- tests/
+.
 |-- README.md
 |-- README.en.md
 |-- README.zh-CN.md
-|-- requirements.txt
-`-- __init__.py
+|-- main/
+|   |-- api/
+|   |-- assets/
+|   |-- core/
+|   |-- services/
+|   |-- tests/
+|   |-- requirements.txt
+|   `-- __init__.py
+`-- start.py
 ```
 
 - `api/` 放 FastAPI 路由与示例返回
@@ -134,12 +141,12 @@ main/
 
 Cortex 采用 `PolyForm Noncommercial 1.0.0` 源码可见许可。
 
-- 英文原文：[../LICENSE](../LICENSE)
-- 中文参考：[../LICENSE.zh-CN.md](../LICENSE.zh-CN.md)
+- 英文原文：[LICENSE](LICENSE)
+- 中文参考：[LICENSE.zh-CN.md](LICENSE.zh-CN.md)
 - 未经单独授权，不允许商用
 - 转载原版或修改版时，必须保留 `Cortex by Ransen1337-star` 署名
-- 必须一并保留仓库根目录中的 `NOTICE` 要求通知
-- `Cortex` 名称与 logo 不随软件许可一起授权，详见 `TRADEMARKS.md`
+- 必须一并保留仓库根目录中的 [NOTICE](NOTICE) 要求通知
+- `Cortex` 名称与 logo 不随软件许可一起授权，详见 [TRADEMARKS.md](TRADEMARKS.md)
 
 ---
 

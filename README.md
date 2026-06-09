@@ -7,9 +7,9 @@
 **Cortex, a public source code project for Bilibili and Douyin video analysis**
 
 <p>
-  <a href="main/README.en.md"><strong>English</strong></a>
+  <a href="README.en.md"><strong>English</strong></a>
   &nbsp;|&nbsp;
-  <a href="main/README.zh-CN.md"><strong>简体中文</strong></a>
+  <a href="README.zh-CN.md"><strong>简体中文</strong></a>
 </p>
 
 <p>
@@ -23,17 +23,18 @@
 
 ## Overview
 
-Cortex publishes a compact FastAPI codebase for parsing public Bilibili and Douyin video links, normalizing metadata, and rendering SVG share cards.
+Cortex is a compact FastAPI source code project for parsing public Bilibili and Douyin video links, returning normalized metadata, and rendering SVG share cards.
 
-This repository keeps the root intentionally minimal:
+The repository keeps the root intentionally clean:
 
-- `start.py` for startup
-- `main/` for source code, assets, documentation, and dependencies
+- `start.py` as the only startup entry
+- `main/` for source code, assets, tests, and runtime dependencies
+- `README.md`, `README.en.md`, and `README.zh-CN.md` as the only public docs at the root
 
-Choose a language-specific README:
+## Readme
 
-- English: [main/README.en.md](main/README.en.md)
-- 简体中文: [main/README.zh-CN.md](main/README.zh-CN.md)
+- English: [README.en.md](README.en.md)
+- 简体中文: [README.zh-CN.md](README.zh-CN.md)
 
 ## Quick Start
 
@@ -65,18 +66,18 @@ http://127.0.0.1:8000/openapi.json
 |-- LICENSE
 |-- LICENSE.zh-CN.md
 |-- NOTICE
+|-- README.md
+|-- README.en.md
+|-- README.zh-CN.md
+|-- TRADEMARKS.md
 |-- main/
 |   |-- api/
 |   |-- assets/
 |   |-- core/
 |   |-- services/
 |   |-- tests/
-|   |-- README.md
-|   |-- README.en.md
-|   |-- README.zh-CN.md
 |   |-- requirements.txt
 |   `-- __init__.py
-|-- README.md
 `-- start.py
 ```
 
