@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="main/assets/logo.svg" alt="Video Analysis API logo" width="176">
+<img src="main/assets/cortex-logo.svg" alt="Cortex logo" width="240">
 
-# Video Analysis API
+# Cortex
 
-**Public video analysis API for Bilibili and Douyin**
+**Cortex, a public video analysis API for Bilibili and Douyin**
 
 <p>
   <a href="main/README.en.md"><strong>English</strong></a>
@@ -54,6 +54,12 @@ http://127.0.0.1:8000/openapi.json
 > - Private or login-only content is not supported
 > - Douyin public pages may not expose a reliable real play count
 
+## License
+
+Cortex is source-available under [PolyForm Noncommercial 1.0.0](LICENSE). Commercial use is not allowed without separate permission.
+
+Redistributions and modified copies must keep attribution to `Ransen1337-star` and preserve the required notices in [NOTICE](NOTICE). The `Cortex` name and logo are not granted as trademark rights; see [TRADEMARKS.md](TRADEMARKS.md).
+
 ---
 
-❤️‍🩹 感谢您使用 Video Analysis API，Built with ❤️ by Ransen1337-star
+❤️‍🩹 感谢您使用 Cortex，Built with ❤️ by Ransen1337-star

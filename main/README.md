@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="Video Analysis API logo" width="172">
+<img src="assets/cortex-logo.svg" alt="Cortex logo" width="228">
 
-# Video Analysis API
+# Cortex
 
-**Clean public video analysis API for Bilibili and Douyin**
+**Cortex, a clean public video analysis API for Bilibili and Douyin**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -53,6 +53,15 @@ The repository root only keeps `start.py`. Application code, assets, docs, and r
 > - Prefer full public URLs
 > - Use `/docs` for quick endpoint testing
 
+## License
+
+Cortex is source-available under `PolyForm Noncommercial 1.0.0`.
+
+- No commercial use without separate permission
+- Redistributing copies or modified versions must keep attribution to `Ransen1337-star`
+- Required notices must be preserved from the repository root `NOTICE`
+- The `Cortex` name and logo are not licensed as trademarks
+
 ---
 
-❤️‍🩹 感谢您使用 Video Analysis API，Built with ❤️ by Ransen1337-star
+❤️‍🩹 感谢您使用 Cortex，Built with ❤️ by Ransen1337-star

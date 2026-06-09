@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="Video Analysis API logo" width="176">
+<img src="assets/cortex-logo.svg" alt="Cortex logo" width="240">
 
-# Video Analysis API
+# Cortex
 
-**A lightweight API for public Bilibili and Douyin video links**
+**Cortex, a lightweight API for public Bilibili and Douyin video links**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -24,7 +24,7 @@
 
 ## Overview
 
-Video Analysis API parses public video links and returns normalized metadata, engagement metrics, source URLs, and SVG share cards in a consistent format.
+Cortex parses public video links and returns normalized metadata, engagement metrics, source URLs, and SVG share cards in a consistent format.
 
 The repository stays intentionally compact: `start.py` remains at the root, while all app code, assets, docs, and dependencies live inside `main/`.
 
@@ -123,6 +123,15 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 - Parsing quality depends on upstream public page structure
 - Some Douyin metrics may be limited by upstream public responses
 
+## License
+
+Cortex is source-available under `PolyForm Noncommercial 1.0.0`.
+
+- Commercial use is not allowed without separate permission
+- Redistributing original or modified copies must keep attribution to `Ransen1337-star`
+- Required notices must be preserved from the repository root `NOTICE`
+- The `Cortex` name and logo are not licensed as trademarks; see `TRADEMARKS.md`
+
 ---
 
-❤️‍🩹 Thank you for using Video Analysis API, Built with ❤️ by Ransen1337-star
+❤️‍🩹 Thank you for using Cortex, Built with ❤️ by Ransen1337-star

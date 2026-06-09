@@ -39,7 +39,7 @@ class VideoSourceFile(SourceFile):
 class VideoAnalysisResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    product: Literal["Video Analysis"] = Field(description="Product name")
+    product: Literal["Cortex"] = Field(description="Product name")
     platform: Literal["bilibili", "douyin"] = Field(description="Matched platform")
     input_url: str = Field(description="Normalized input url used for parsing")
     canonical_url: str = Field(description="Canonical platform video url")

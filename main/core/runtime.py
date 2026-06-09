@@ -15,11 +15,11 @@ class RuntimeUrls:
 
 
 def resolve_host() -> str:
-    return os.getenv("VIDEO_ANALYSIS_HOST", DEFAULT_HOST)
+    return os.getenv("CORTEX_HOST") or os.getenv("VIDEO_ANALYSIS_HOST", DEFAULT_HOST)
 
 
 def resolve_port() -> int:
-    return int(os.getenv("VIDEO_ANALYSIS_PORT", str(DEFAULT_PORT)))
+    return int(os.getenv("CORTEX_PORT") or os.getenv("VIDEO_ANALYSIS_PORT", str(DEFAULT_PORT)))
 
 
 def resolve_display_host(host: str) -> str:

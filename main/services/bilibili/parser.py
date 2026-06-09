@@ -261,7 +261,7 @@ def build_response(
     video_data = page_state.get("videoData") if isinstance(page_state.get("videoData"), dict) else {}
     stat = video_data.get("stat") if isinstance(video_data.get("stat"), dict) else {}
     return VideoAnalysisResponse(
-        product="Video Analysis",
+        product="Cortex",
         platform="bilibili",
         input_url=input_url,
         canonical_url=canonical_url,

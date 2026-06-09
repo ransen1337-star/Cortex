@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="Video Analysis API 标志" width="176">
+<img src="assets/cortex-logo.svg" alt="Cortex 标志" width="240">
 
-# Video Analysis API
+# Cortex
 
-**面向 Bilibili 与抖音公开链接的轻量解析 API**
+**Cortex，面向 Bilibili 与抖音公开链接的轻量解析 API**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -24,7 +24,7 @@
 
 ## 简介
 
-Video Analysis API 用于解析公开视频链接，统一输出标题、描述、发布时间、互动指标、视频源、封面源，并支持生成 SVG 分享卡片。
+Cortex 用于解析公开视频链接，统一输出标题、描述、发布时间、互动指标、视频源、封面源，并支持生成 SVG 分享卡片。
 
 项目根目录只保留 `start.py`，其余代码、资源、文档与依赖统一放在 `main/` 中，结构更清晰，也更方便维护。
 
@@ -123,6 +123,15 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 - 平台页面结构变动时，解析逻辑可能需要同步调整
 - 抖音部分公开页面字段存在限制，个别指标可能受上游返回影响
 
+## 协议
+
+Cortex 采用 `PolyForm Noncommercial 1.0.0` 源码可见许可。
+
+- 未经单独授权，不允许商用
+- 转载原版或修改版时，必须保留对 `Ransen1337-star` 的署名
+- 必须一并保留仓库根目录中的 `NOTICE` 要求通知
+- `Cortex` 名称与 logo 不随软件许可一起授权，详见 `TRADEMARKS.md`
+
 ---
 
-❤️‍🩹 感谢您使用 Video Analysis API，Built with ❤️ by Ransen1337-star
+❤️‍🩹 感谢您使用 Cortex，Built with ❤️ by Ransen1337-star

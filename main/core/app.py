@@ -17,7 +17,7 @@ from main.services.utils import create_http_client
 from main.services.utils import normalize_remote_asset_url
 
 
-APP_TITLE = "Video Analysis API"
+APP_TITLE = "Cortex"
 APP_VERSION = "0.4.0"
 SHARE_CARD_SVG_EXAMPLE = '<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg"></svg>'
 SHARE_CARD_ASSET_PROXY_PATH = "/api/v1/share-card/assets"
@@ -27,7 +27,7 @@ BILIBILI_VIDEO_ANALYSIS_EXAMPLES = {
     "bilibili_source_file": {
         "summary": "Bilibili source file",
         "value": {
-            "product": "Video Analysis",
+            "product": "Cortex",
             "platform": "bilibili",
             "input_url": "https://www.bilibili.com/video/BV1xx411c7mu",
             "canonical_url": "https://www.bilibili.com/video/BV1xx411c7mu",
@@ -67,7 +67,7 @@ DOUYIN_VIDEO_ANALYSIS_EXAMPLES = {
     "douyin_source_file": {
         "summary": "Douyin source file",
         "value": {
-            "product": "Video Analysis",
+            "product": "Cortex",
             "platform": "douyin",
             "input_url": "https://www.iesdouyin.com/share/video/7606942757253803610/",
             "canonical_url": "https://www.douyin.com/video/7606942757253803610",
@@ -108,20 +108,20 @@ def create_app() -> FastAPI:
         title=APP_TITLE,
         version=APP_VERSION,
         description=(
-            "Public video analysis APIs for Bilibili and Douyin, "
+            "Cortex public video analysis APIs for Bilibili and Douyin, "
             "plus reusable SVG share-card rendering."
         ),
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url=None,
         openapi_tags=[
-            {"name": "Video Analysis", "description": "Shared service operations."},
+            {"name": "Cortex", "description": "Shared Cortex service operations."},
             {
-                "name": "Bilibili Video Analysis",
+                "name": "Bilibili Analysis",
                 "description": "Analyze Bilibili links and return metrics, direct video source files, and direct cover source files.",
             },
             {
-                "name": "Douyin Video Analysis",
+                "name": "Douyin Analysis",
                 "description": "Analyze Douyin links and return metrics, direct video source files, and direct cover source files.",
             },
             {"name": "Share Card", "description": "Render platform share cards."},
@@ -133,7 +133,11 @@ def create_app() -> FastAPI:
 
 
 def configure_share_card_fonts() -> None:
-    font_stack = os.getenv("VIDEO_ANALYSIS_SHARE_CARD_FONT_FAMILY", DEFAULT_CARD_FONT_STACK)
+    font_stack = (
+        os.getenv("CORTEX_SHARE_CARD_FONT_FAMILY")
+        or os.getenv("VIDEO_ANALYSIS_SHARE_CARD_FONT_FAMILY")
+        or DEFAULT_CARD_FONT_STACK
+    )
     set_share_card_font_stack(font_stack)
 
 
@@ -146,7 +150,7 @@ def register_routes(
     def index() -> RedirectResponse:
         return RedirectResponse(url="/docs")
 
-    @app.get("/health", tags=["Video Analysis"], summary="Health Check")
+    @app.get("/health", tags=["Cortex"], summary="Health Check")
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
@@ -181,9 +185,9 @@ def register_routes(
         response_model=VideoAnalysisResponse,
         response_model_exclude_none=True,
         include_in_schema=False,
-        tags=["Video Analysis"],
+        tags=["Cortex"],
         summary="Analyze Video",
-        description="Legacy unified entry kept for compatibility.",
+        description="Legacy unified Cortex entry kept for compatibility.",
     )
     def analyze_video(
         request: Request,
@@ -211,7 +215,7 @@ def register_routes(
         "/api/v1/bilibili/video-analysis",
         response_model=VideoAnalysisResponse,
         response_model_exclude_none=True,
-        tags=["Bilibili Video Analysis"],
+        tags=["Bilibili Analysis"],
         summary="Analyze Bilibili Video",
         description="Return core metrics, a direct video source file, and a direct cover source file from a Bilibili video link.",
         responses={200: build_json_example_response(BILIBILI_VIDEO_ANALYSIS_EXAMPLES)},
@@ -246,7 +250,7 @@ def register_routes(
         "/api/v1/douyin/video-analysis",
         response_model=VideoAnalysisResponse,
         response_model_exclude_none=True,
-        tags=["Douyin Video Analysis"],
+        tags=["Douyin Analysis"],
         summary="Analyze Douyin Video",
         description="Return core metrics, a direct video source file, and a direct cover source file from a Douyin video link.",
         responses={200: build_json_example_response(DOUYIN_VIDEO_ANALYSIS_EXAMPLES)},

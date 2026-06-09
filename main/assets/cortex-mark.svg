@@ -1,0 +1,26 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cortex-mark-left" x1="70" y1="92" x2="122" y2="182" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#0F766E"/>
+    </linearGradient>
+    <linearGradient id="cortex-mark-right" x1="134" y1="86" x2="188" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5EEAD4"/>
+      <stop offset="1" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="cortex-mark-top" x1="86" y1="64" x2="170" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E0F2FE"/>
+      <stop offset="1" stop-color="#67E8F9"/>
+    </linearGradient>
+    <linearGradient id="cortex-mark-shadow" x1="84" y1="186" x2="172" y2="222" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F172A" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0F172A" stop-opacity="0.34"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="128" cy="206" rx="58" ry="15" fill="url(#cortex-mark-shadow)"/>
+  <path d="M128 56L184 88L128 118L72 88L128 56Z" fill="url(#cortex-mark-top)"/>
+  <path d="M72 88L128 118V182L72 150V88Z" fill="url(#cortex-mark-left)"/>
+  <path d="M184 88L128 118V182L184 150V88Z" fill="url(#cortex-mark-right)"/>
+  <path d="M104 104L124 115V148L104 137V104Z" fill="#F8FAFC" fill-opacity="0.94"/>
+  <path d="M138 120L166 105V137L138 152V120Z" fill="#CCFBF1" fill-opacity="0.9"/>
+</svg>

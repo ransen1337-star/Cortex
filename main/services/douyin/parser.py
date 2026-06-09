@@ -181,7 +181,7 @@ def build_response(input_url: str, item: dict[str, Any]) -> VideoAnalysisRespons
     play_count = resolve_douyin_play_count(statistics)
     display_title = build_douyin_display_title(description, text_extra) or aweme_id
     return VideoAnalysisResponse(
-        product="Video Analysis",
+        product="Cortex",
         platform="douyin",
         input_url=input_url,
         canonical_url=f"https://www.douyin.com/video/{aweme_id}",
