@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="main/assets/cortex-logo.svg" alt="Cortex logo" width="240">
+<img src="main/assets/cortex-logo.svg" alt="Cortex logo" width="420">
 
 # Cortex
 
@@ -50,6 +50,122 @@ http://127.0.0.1:8000
 http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/openapi.json
 ```
+
+## Card Preview
+
+Static preview assets for the built-in share-card layout:
+
+<p align="center">
+  <img src="main/assets/readme-bilibili-card.svg" alt="Bilibili share card preview" width="48%">
+  <img src="main/assets/readme-douyin-card.svg" alt="Douyin share card preview" width="48%">
+</p>
+
+Actual card endpoints:
+
+```text
+/api/v1/bilibili/share-card?url=https://www.bilibili.com/video/BV15kVJzYE5N/
+/api/v1/douyin/share-card?url=https://www.iesdouyin.com/share/video/7634486870264597775/
+```
+
+## Response Preview
+
+<details>
+<summary>Bilibili JSON response</summary>
+
+```json
+{
+  "product": "Cortex",
+  "platform": "bilibili",
+  "input_url": "https://www.bilibili.com/video/BV15kVJzYE5N/",
+  "canonical_url": "https://www.bilibili.com/video/BV15kVJzYE5N",
+  "video_id": "BV15kVJzYE5N",
+  "title": "Bilibili Sample",
+  "description": "Public video metadata extracted from Bilibili.",
+  "duration_seconds": 291.0,
+  "published_at": "2026-06-05T10:05:28Z",
+  "metrics": {
+    "play_count": 5030049,
+    "danmaku_count": 6964,
+    "comment_count": 23141,
+    "like_count": 213529,
+    "share_count": 17775,
+    "favorite_count": 25971,
+    "coin_count": 17036
+  },
+  "video_source": {
+    "url": "https://example.com/bilibili-video.mp4",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0"
+    },
+    "source_mode": "single_file",
+    "format_id": "html5-durl-64",
+    "quality": "720P",
+    "container": "mp4",
+    "width": 1280,
+    "height": 720
+  },
+  "cover_source": {
+    "url": "https://example.com/bilibili-cover.jpg",
+    "request_headers": {
+      "User-Agent": "Mozilla/5.0"
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Douyin JSON response</summary>
+
+```json
+{
+  "product": "Cortex",
+  "platform": "douyin",
+  "input_url": "https://www.iesdouyin.com/share/video/7634486870264597775/",
+  "canonical_url": "https://www.douyin.com/video/7634486870264597775",
+  "video_id": "7634486870264597775",
+  "title": "Douyin Sample",
+  "description": "Public video metadata extracted from Douyin.",
+  "duration_seconds": 17.267,
+  "published_at": "2026-02-18T13:00:00Z",
+  "author": {
+    "name": "Douyin Creator",
+    "unique_id": "1234567890",
+    "sec_uid": "MS4wLjABAAAAexample-sec-uid",
+    "profile_url": "https://www.douyin.com/user/MS4wLjABAAAAexample-sec-uid",
+    "avatar_url": "https://example.com/avatar.jpeg",
+    "signature": "Example creator signature",
+    "follower_count": 1147000,
+    "total_favorited": 83954608,
+    "verification": {
+      "is_verified": true,
+      "theme": "red",
+      "text": "Example official verification"
+    }
+  },
+  "metrics": {
+    "comment_count": 238,
+    "like_count": 7171,
+    "share_count": 159,
+    "favorite_count": 255
+  },
+  "video_source": {
+    "url": "https://example.com/douyin-video.mp4",
+    "source_mode": "single_file",
+    "format_id": "douyin-play",
+    "quality": "720p",
+    "container": "mp4",
+    "width": 1080,
+    "height": 1920
+  },
+  "cover_source": {
+    "url": "https://example.com/douyin-cover.jpeg"
+  }
+}
+```
+
+</details>
 
 > #### <img src="main/assets/callout-important.svg" alt="" width="18" align="absmiddle"> IMPORTANT
 >

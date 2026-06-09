@@ -1,32 +1,13 @@
-<svg width="1040" height="280" viewBox="0 0 1040 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="980" height="240" viewBox="0 0 980 240" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cortex-logo-title cortex-logo-desc">
+  <title id="cortex-logo-title">Cortex wordmark</title>
+  <desc id="cortex-logo-desc">Centered Cortex source code project wordmark on a transparent background.</desc>
   <defs>
-    <linearGradient id="cortex-logo-left" x1="118" y1="92" x2="170" y2="182" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#38BDF8"/>
-      <stop offset="1" stop-color="#0F766E"/>
-    </linearGradient>
-    <linearGradient id="cortex-logo-right" x1="182" y1="86" x2="236" y2="180" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#5EEAD4"/>
-      <stop offset="1" stop-color="#0284C7"/>
-    </linearGradient>
-    <linearGradient id="cortex-logo-top" x1="134" y1="64" x2="218" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E0F2FE"/>
-      <stop offset="1" stop-color="#67E8F9"/>
-    </linearGradient>
-    <linearGradient id="cortex-logo-shadow" x1="132" y1="186" x2="220" y2="222" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0F172A" stop-opacity="0"/>
-      <stop offset="1" stop-color="#0F172A" stop-opacity="0.34"/>
-    </linearGradient>
-    <linearGradient id="cortex-word-fill" x1="318" y1="52" x2="760" y2="232" gradientUnits="userSpaceOnUse">
+    <linearGradient id="cortex-word-fill" x1="178" y1="32" x2="824" y2="216" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#F8FAFC"/>
-      <stop offset="1" stop-color="#CCFBF1"/>
+      <stop offset="0.48" stop-color="#D1FAE5"/>
+      <stop offset="1" stop-color="#99F6E4"/>
     </linearGradient>
   </defs>
-  <ellipse cx="176" cy="206" rx="58" ry="15" fill="url(#cortex-logo-shadow)"/>
-  <path d="M176 56L232 88L176 118L120 88L176 56Z" fill="url(#cortex-logo-top)"/>
-  <path d="M120 88L176 118V182L120 150V88Z" fill="url(#cortex-logo-left)"/>
-  <path d="M232 88L176 118V182L232 150V88Z" fill="url(#cortex-logo-right)"/>
-  <path d="M152 104L172 115V148L152 137V104Z" fill="#F8FAFC" fill-opacity="0.94"/>
-  <path d="M186 120L214 105V137L186 152V120Z" fill="#CCFBF1" fill-opacity="0.9"/>
-  <text x="322" y="142" fill="url(#cortex-word-fill)" stroke="#0F172A" stroke-width="10" paint-order="stroke fill" font-family="Segoe UI, Arial, sans-serif" font-size="106" font-weight="800" letter-spacing="-3">Cortex</text>
-  <text x="328" y="196" fill="#D1FAE5" stroke="#0F172A" stroke-width="4" paint-order="stroke fill" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="800" letter-spacing="5">SOURCE CODE PROJECT</text>
+  <text x="490" y="132" text-anchor="middle" fill="url(#cortex-word-fill)" stroke="#0F172A" stroke-width="12" paint-order="stroke fill" font-family="Segoe UI, Arial, sans-serif" font-size="122" font-weight="800" letter-spacing="-4">Cortex</text>
+  <text x="490" y="192" text-anchor="middle" fill="#D1FAE5" stroke="#0F172A" stroke-width="5" paint-order="stroke fill" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="6">SOURCE CODE PROJECT</text>
 </svg>
