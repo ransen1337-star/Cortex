@@ -4,7 +4,7 @@
 
 # Cortex
 
-**Cortex, a lightweight API for public Bilibili and Douyin video links**
+**Cortex, a lightweight public source code project for Bilibili and Douyin video analysis**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -24,9 +24,9 @@
 
 ## Overview
 
-Cortex parses public video links and returns normalized metadata, engagement metrics, source URLs, and SVG share cards in a consistent format.
+Cortex publishes source code for parsing public video links and returning normalized metadata, engagement metrics, source URLs, and SVG share cards in a consistent format.
 
-The repository stays intentionally compact: `start.py` remains at the root, while all app code, assets, docs, and dependencies live inside `main/`.
+The repository stays intentionally compact: `start.py` remains at the root, while all source code, assets, docs, and dependencies live inside `main/`.
 
 > #### <img src="assets/callout-important.svg" alt="" width="18" align="absmiddle"> IMPORTANT
 >
@@ -53,6 +53,7 @@ The repository stays intentionally compact: `start.py` remains at the root, whil
 - Return a clean shared response structure
 - Generate SVG share cards for both platforms
 - Expose Swagger documentation at `/docs`
+- Preserve project attribution as `Cortex by Ransen1337-star`
 
 ## Supported Example Links
 
@@ -106,17 +107,23 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 ## Project Structure
 
 ```text
-.
-|-- main/
-|   |-- assets/
-|   |-- core/
-|   |-- services/
-|   |-- README.md
-|   |-- README.en.md
-|   |-- README.zh-CN.md
-|   `-- requirements.txt
-`-- start.py
+main/
+|-- api/
+|-- assets/
+|-- core/
+|-- services/
+|-- tests/
+|-- README.md
+|-- README.en.md
+|-- README.zh-CN.md
+|-- requirements.txt
+`-- __init__.py
 ```
+
+- `api/` contains FastAPI routes and example response payloads
+- `core/` contains branding and runtime configuration helpers
+- `services/` contains platform parsers, shared models, utilities, and share-card rendering
+- `tests/` contains API and parser regression tests
 
 ## Notes
 
@@ -127,8 +134,10 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 
 Cortex is source-available under `PolyForm Noncommercial 1.0.0`.
 
+- English license: [../LICENSE](../LICENSE)
+- Chinese reference: [../LICENSE.zh-CN.md](../LICENSE.zh-CN.md)
 - Commercial use is not allowed without separate permission
-- Redistributing original or modified copies must keep attribution to `Ransen1337-star`
+- Redistributing original or modified copies must keep attribution as `Cortex by Ransen1337-star`
 - Required notices must be preserved from the repository root `NOTICE`
 - The `Cortex` name and logo are not licensed as trademarks; see `TRADEMARKS.md`
 

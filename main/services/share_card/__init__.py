@@ -1,10 +1,13 @@
+import base64
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from html import escape
 from typing import Literal
 from urllib.parse import quote
 
+import httpx
 from pydantic import BaseModel, ConfigDict, Field
+from main.services.utils import build_remote_asset_request_headers
 from main.services.utils import create_http_client
 from main.services.utils import normalize_remote_asset_url
 
@@ -377,9 +380,19 @@ def fetch_remote_image_data_uri(url: str | None, asset_proxy_path: str | None = 
     normalized_url = normalize_remote_asset_url(url)
     if normalized_url is None:
         return None
-    if asset_proxy_path:
-        return build_share_card_asset_proxy_url(asset_proxy_path, normalized_url)
-    return normalized_url
+    try:
+        response = HTTP_CLIENT.get(
+            normalized_url,
+            headers=build_remote_asset_request_headers(normalized_url),
+        )
+        response.raise_for_status()
+    except httpx.HTTPError:
+        if asset_proxy_path:
+            return build_share_card_asset_proxy_url(asset_proxy_path, normalized_url)
+        return normalized_url
+    media_type = response.headers.get("content-type") or "application/octet-stream"
+    encoded_content = base64.b64encode(response.content).decode("ascii")
+    return f"data:{media_type};base64,{encoded_content}"
 
 
 def fetch_remote_image_data_uris(urls: list[str | None], asset_proxy_path: str | None = None) -> dict[str | None, str | None]:

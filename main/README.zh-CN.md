@@ -4,7 +4,7 @@
 
 # Cortex
 
-**Cortex，面向 Bilibili 与抖音公开链接的轻量解析 API**
+**Cortex，面向 Bilibili 与抖音视频解析的轻量公开源码项目**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -24,9 +24,9 @@
 
 ## 简介
 
-Cortex 用于解析公开视频链接，统一输出标题、描述、发布时间、互动指标、视频源、封面源，并支持生成 SVG 分享卡片。
+Cortex 用于公开源码方式提供视频解析能力，统一输出标题、描述、发布时间、互动指标、视频源、封面源，并支持生成 SVG 分享卡片。
 
-项目根目录只保留 `start.py`，其余代码、资源、文档与依赖统一放在 `main/` 中，结构更清晰，也更方便维护。
+项目根目录只保留 `start.py`，其余源码、资源、文档与依赖统一放在 `main/` 中，结构更清晰，也更方便维护。
 
 > #### <img src="assets/callout-important.svg" alt="" width="18" align="absmiddle"> 重要说明
 >
@@ -53,6 +53,7 @@ Cortex 用于解析公开视频链接，统一输出标题、描述、发布时�
 - 返回统一字段结构，便于前端或脚本接入
 - 提供 Bilibili / Douyin 分享卡片 SVG 接口
 - 内置 Swagger 文档，启动后可直接访问 `/docs`
+- 保留项目署名 `Cortex by Ransen1337-star`
 
 ## 支持的链接
 
@@ -106,17 +107,23 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 ## 目录结构
 
 ```text
-.
-|-- main/
-|   |-- assets/
-|   |-- core/
-|   |-- services/
-|   |-- README.md
-|   |-- README.en.md
-|   |-- README.zh-CN.md
-|   `-- requirements.txt
-`-- start.py
+main/
+|-- api/
+|-- assets/
+|-- core/
+|-- services/
+|-- tests/
+|-- README.md
+|-- README.en.md
+|-- README.zh-CN.md
+|-- requirements.txt
+`-- __init__.py
 ```
+
+- `api/` 放 FastAPI 路由与示例返回
+- `core/` 放品牌信息与运行时配置辅助代码
+- `services/` 放平台解析器、共享模型、工具函数与分享卡片渲染
+- `tests/` 放 API 与解析器回归测试
 
 ## 说明
 
@@ -127,8 +134,10 @@ curl "http://127.0.0.1:8000/api/v1/bilibili/share-card?url=https%3A%2F%2Fwww.bil
 
 Cortex 采用 `PolyForm Noncommercial 1.0.0` 源码可见许可。
 
+- 英文原文：[../LICENSE](../LICENSE)
+- 中文参考：[../LICENSE.zh-CN.md](../LICENSE.zh-CN.md)
 - 未经单独授权，不允许商用
-- 转载原版或修改版时，必须保留对 `Ransen1337-star` 的署名
+- 转载原版或修改版时，必须保留 `Cortex by Ransen1337-star` 署名
 - 必须一并保留仓库根目录中的 `NOTICE` 要求通知
 - `Cortex` 名称与 logo 不随软件许可一起授权，详见 `TRADEMARKS.md`
 

@@ -4,7 +4,7 @@
 
 # Cortex
 
-**Cortex, a public video analysis API for Bilibili and Douyin**
+**Cortex, a public source code project for Bilibili and Douyin video analysis**
 
 <p>
   <a href="main/README.en.md"><strong>English</strong></a>
@@ -23,10 +23,12 @@
 
 ## Overview
 
+Cortex publishes a compact FastAPI codebase for parsing public Bilibili and Douyin video links, normalizing metadata, and rendering SVG share cards.
+
 This repository keeps the root intentionally minimal:
 
 - `start.py` for startup
-- `main/` for application code, assets, documentation, and dependencies
+- `main/` for source code, assets, documentation, and dependencies
 
 Choose a language-specific README:
 
@@ -53,12 +55,46 @@ http://127.0.0.1:8000/openapi.json
 > - Public links only
 > - Private or login-only content is not supported
 > - Douyin public pages may not expose a reliable real play count
+>
+> - Attribution must remain as `Cortex by Ransen1337-star` when redistributing this source code
+
+## Structure
+
+```text
+.
+|-- LICENSE
+|-- LICENSE.zh-CN.md
+|-- NOTICE
+|-- main/
+|   |-- api/
+|   |-- assets/
+|   |-- core/
+|   |-- services/
+|   |-- tests/
+|   |-- README.md
+|   |-- README.en.md
+|   |-- README.zh-CN.md
+|   |-- requirements.txt
+|   `-- __init__.py
+|-- README.md
+`-- start.py
+```
+
+- `main/api/` keeps FastAPI routes and OpenAPI examples
+- `main/core/` keeps branding and runtime configuration helpers
+- `main/services/` keeps platform parsers, models, utilities, and share-card rendering
+- `main/tests/` keeps parser and API regression tests
 
 ## License
 
-Cortex is source-available under [PolyForm Noncommercial 1.0.0](LICENSE). Commercial use is not allowed without separate permission.
+Cortex is source-available under `PolyForm Noncommercial 1.0.0`.
 
-Redistributions and modified copies must keep attribution to `Ransen1337-star` and preserve the required notices in [NOTICE](NOTICE). The `Cortex` name and logo are not granted as trademark rights; see [TRADEMARKS.md](TRADEMARKS.md).
+- English license: [LICENSE](LICENSE)
+- Chinese reference: [LICENSE.zh-CN.md](LICENSE.zh-CN.md)
+- Commercial use is not allowed without separate permission
+- Redistributions and modified copies must keep attribution as `Cortex by Ransen1337-star`
+- Required notices in [NOTICE](NOTICE) must be preserved
+- The `Cortex` name and logo are not granted as trademark rights; see [TRADEMARKS.md](TRADEMARKS.md)
 
 ---
 

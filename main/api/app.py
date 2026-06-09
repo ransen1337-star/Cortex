@@ -1,9 +1,17 @@
 import os
+from typing import Any
+from collections.abc import Callable
 from urllib.parse import unquote_plus
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse, Response
 
+from main.api.examples import BILIBILI_VIDEO_ANALYSIS_EXAMPLES
+from main.api.examples import DOUYIN_VIDEO_ANALYSIS_EXAMPLES
+from main.api.examples import build_json_example_response
+from main.api.examples import build_svg_example_response
+from main.core.branding import PROJECT_DESCRIPTION
+from main.core.branding import PROJECT_NAME
 from main.services import BilibiliExtractionError
 from main.services import BilibiliParserService
 from main.services import DouyinExtractionError
@@ -13,104 +21,54 @@ from main.services import InvalidDouyinUrlError
 from main.services import VideoAnalysisResponse
 from main.services.share_card import DEFAULT_CARD_FONT_STACK
 from main.services.share_card import set_share_card_font_stack
+from main.services.utils import BILIBILI_ASSET_REFERER
+from main.services.utils import DOUYIN_ASSET_REFERER
+from main.services.utils import build_remote_asset_request_headers
 from main.services.utils import create_http_client
 from main.services.utils import normalize_remote_asset_url
 
 
-APP_TITLE = "Cortex"
+APP_TITLE = PROJECT_NAME
 APP_VERSION = "0.4.0"
-SHARE_CARD_SVG_EXAMPLE = '<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg"></svg>'
 SHARE_CARD_ASSET_PROXY_PATH = "/api/v1/share-card/assets"
 ASSET_PROXY_CLIENT = create_http_client(20)
 
-BILIBILI_VIDEO_ANALYSIS_EXAMPLES = {
-    "bilibili_source_file": {
-        "summary": "Bilibili source file",
-        "value": {
-            "product": "Cortex",
-            "platform": "bilibili",
-            "input_url": "https://www.bilibili.com/video/BV1xx411c7mu",
-            "canonical_url": "https://www.bilibili.com/video/BV1xx411c7mu",
-            "video_id": "BV1xx411c7mu",
-            "title": "Example Bilibili video",
-            "description": "Public video metadata extracted from Bilibili.",
-            "duration_seconds": 291.0,
-            "published_at": "2026-06-05T10:05:28Z",
-            "metrics": {
-                "play_count": 5030049,
-                "danmaku_count": 6964,
-                "comment_count": 23141,
-                "like_count": 213529,
-                "share_count": 17775,
-                "favorite_count": 25971,
-                "coin_count": 17036,
-            },
-            "video_source": {
-                "url": "https://example.com/video.mp4",
-                "request_headers": {"User-Agent": "Mozilla/5.0"},
-                "source_mode": "single_file",
-                "format_id": "html5-durl-64",
-                "quality": "720P",
-                "container": "mp4",
-                "width": 1280,
-                "height": 720,
-            },
-            "cover_source": {
-                "url": "https://example.com/cover.jpg",
-                "request_headers": {"User-Agent": "Mozilla/5.0"},
-            },
-        },
-    }
-}
-
-DOUYIN_VIDEO_ANALYSIS_EXAMPLES = {
-    "douyin_source_file": {
-        "summary": "Douyin source file",
-        "value": {
-            "product": "Cortex",
-            "platform": "douyin",
-            "input_url": "https://www.iesdouyin.com/share/video/7606942757253803610/",
-            "canonical_url": "https://www.douyin.com/video/7606942757253803610",
-            "video_id": "7606942757253803610",
-            "title": "Example Douyin video",
-            "description": "Public video metadata extracted from Douyin.",
-            "declaration": "Platform-provided declaration when available.",
-            "duration_seconds": 17.267,
-            "published_at": "2026-02-18T13:00:00Z",
-            "metrics": {
-                "comment_count": 238,
-                "like_count": 7171,
-                "share_count": 159,
-                "favorite_count": 255,
-            },
-            "video_source": {
-                "url": "https://example.com/video.mp4",
-                "source_mode": "single_file",
-                "format_id": "douyin-play",
-                "quality": "720p",
-                "container": "mp4",
-                "width": 2160,
-                "height": 3840,
-            },
-            "cover_source": {"url": "https://example.com/cover.jpeg"},
-        },
-    }
-}
+VideoService = BilibiliParserService | DouyinParserService
+AssetProxyFetcher = Callable[[str], tuple[bytes, str]]
 
 
-def create_app() -> FastAPI:
+def build_asset_proxy_request_headers(url: str) -> dict[str, str]:
+    return build_remote_asset_request_headers(url)
+
+
+def create_default_asset_proxy_fetcher(*, asset_client: Any | None = None) -> AssetProxyFetcher:
+    asset_client = asset_client or ASSET_PROXY_CLIENT
+
+    def fetch_asset(url: str) -> tuple[bytes, str]:
+        upstream = asset_client.get(url, headers=build_asset_proxy_request_headers(url))
+        upstream.raise_for_status()
+        media_type = upstream.headers.get("content-type") or "application/octet-stream"
+        return upstream.content, media_type
+
+    return fetch_asset
+
+
+def create_app(
+    *,
+    bilibili_service: BilibiliParserService | None = None,
+    douyin_service: DouyinParserService | None = None,
+    asset_proxy_fetcher: AssetProxyFetcher | None = None,
+) -> FastAPI:
     configure_share_card_fonts()
 
-    bilibili_service = BilibiliParserService()
-    douyin_service = DouyinParserService()
+    bilibili_service = bilibili_service or BilibiliParserService()
+    douyin_service = douyin_service or DouyinParserService()
+    asset_proxy_fetcher = asset_proxy_fetcher or create_default_asset_proxy_fetcher()
 
     app = FastAPI(
         title=APP_TITLE,
         version=APP_VERSION,
-        description=(
-            "Cortex public video analysis APIs for Bilibili and Douyin, "
-            "plus reusable SVG share-card rendering."
-        ),
+        description=PROJECT_DESCRIPTION,
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url=None,
@@ -128,7 +86,12 @@ def create_app() -> FastAPI:
         ],
     )
 
-    register_routes(app, bilibili_service, douyin_service)
+    register_routes(
+        app,
+        bilibili_service=bilibili_service,
+        douyin_service=douyin_service,
+        asset_proxy_fetcher=asset_proxy_fetcher,
+    )
     return app
 
 
@@ -143,8 +106,10 @@ def configure_share_card_fonts() -> None:
 
 def register_routes(
     app: FastAPI,
+    *,
     bilibili_service: BilibiliParserService,
     douyin_service: DouyinParserService,
+    asset_proxy_fetcher: AssetProxyFetcher,
 ) -> None:
     @app.get("/", include_in_schema=False)
     def index() -> RedirectResponse:
@@ -163,19 +128,11 @@ def register_routes(
         if normalized_url is None:
             raise HTTPException(status_code=400, detail="Invalid remote asset URL")
         try:
-            upstream = ASSET_PROXY_CLIENT.get(
-                normalized_url,
-                headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-                    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-                },
-            )
-            upstream.raise_for_status()
+            content, media_type = asset_proxy_fetcher(normalized_url)
         except Exception as error:
             raise HTTPException(status_code=502, detail="Unable to load share-card asset") from error
-        media_type = upstream.headers.get("content-type") or "application/octet-stream"
         return Response(
-            content=upstream.content,
+            content=content,
             media_type=media_type,
             headers={"Cache-Control": "public, max-age=3600"},
         )
@@ -353,7 +310,7 @@ def resolve_video_service(
     url: str,
     bilibili_service: BilibiliParserService,
     douyin_service: DouyinParserService,
-) -> BilibiliParserService | DouyinParserService:
+) -> VideoService:
     if bilibili_service.supports_url(url):
         return bilibili_service
     if douyin_service.supports_url(url):
@@ -362,7 +319,7 @@ def resolve_video_service(
 
 
 def run_platform_analysis(
-    service: BilibiliParserService | DouyinParserService,
+    service: VideoService,
     normalized_input: str,
     invalid_errors: type[Exception] | tuple[type[Exception], ...],
     extraction_errors: type[Exception] | tuple[type[Exception], ...],
@@ -373,20 +330,6 @@ def run_platform_analysis(
         raise HTTPException(status_code=400, detail=error.message) from error
     except extraction_errors as error:
         raise HTTPException(status_code=502, detail=error.message) from error
-
-
-def build_json_example_response(examples: dict[str, object]) -> dict[str, object]:
-    return {
-        "description": "Successful Response",
-        "content": {"application/json": {"examples": examples}},
-    }
-
-
-def build_svg_example_response() -> dict[str, object]:
-    return {
-        "description": "SVG share card",
-        "content": {"image/svg+xml": {"example": SHARE_CARD_SVG_EXAMPLE}},
-    }
 
 
 app = create_app()

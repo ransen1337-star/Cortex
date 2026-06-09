@@ -36,6 +36,28 @@ class VideoSourceFile(SourceFile):
     fps: float | None = Field(default=None, description="Frames per second when available")
 
 
+class VideoAuthorVerification(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    is_verified: bool = Field(description="Whether the author has a public platform verification")
+    theme: Literal["red", "blue", "gold", "gray"] | None = Field(default=None, description="Platform verification theme when available")
+    text: str | None = Field(default=None, description="Human-readable verification text")
+
+
+class VideoAuthor(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, description="Author display name")
+    unique_id: str | None = Field(default=None, description="Platform author unique id or short id")
+    sec_uid: str | None = Field(default=None, description="Platform author secure id when available")
+    profile_url: str | None = Field(default=None, description="Public author profile url when available")
+    avatar_url: str | None = Field(default=None, description="Author avatar url")
+    signature: str | None = Field(default=None, description="Public author signature or bio")
+    follower_count: int | None = Field(default=None, description="Public follower count when available")
+    total_favorited: int | None = Field(default=None, description="Public total liked or favorited count when available")
+    verification: VideoAuthorVerification | None = Field(default=None, description="Public platform verification details")
+
+
 class VideoAnalysisResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -49,6 +71,7 @@ class VideoAnalysisResponse(BaseModel):
     declaration: str | None = Field(default=None, description="Platform-provided content declaration or risk label")
     duration_seconds: float | None = Field(default=None, description="Video duration in seconds")
     published_at: datetime | None = Field(default=None, description="Publish time in ISO 8601 format")
+    author: VideoAuthor | None = Field(default=None, description="Public author information when available")
     metrics: VideoMetrics = Field(description="Video metrics")
     video_source: VideoSourceFile = Field(description="Direct video source information")
     cover_source: SourceFile = Field(description="Direct cover source information")

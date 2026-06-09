@@ -1,7 +1,30 @@
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
+
+
+DEFAULT_REMOTE_IMAGE_ACCEPT = "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+DEFAULT_REMOTE_IMAGE_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    ),
+    "Accept": DEFAULT_REMOTE_IMAGE_ACCEPT,
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+}
+DOUYIN_ASSET_REFERER = "https://www.douyin.com/"
+BILIBILI_ASSET_REFERER = "https://www.bilibili.com/"
+DOUYIN_ASSET_HOST_SUFFIXES = (
+    "douyinpic.com",
+    "douyinvod.com",
+    "byteimg.com",
+)
+BILIBILI_ASSET_HOST_SUFFIXES = (
+    "hdslb.com",
+    "bilibili.com",
+)
 
 
 def create_http_client(timeout: int) -> httpx.Client:
@@ -53,6 +76,20 @@ def normalize_remote_asset_url(url: str | None) -> str | None:
     if normalized_url.startswith("https://"):
         return normalized_url
     return None
+
+
+def host_matches_suffixes(host: str, suffixes: tuple[str, ...]) -> bool:
+    return any(host == suffix or host.endswith(f".{suffix}") for suffix in suffixes)
+
+
+def build_remote_asset_request_headers(url: str) -> dict[str, str]:
+    headers = dict(DEFAULT_REMOTE_IMAGE_HEADERS)
+    host = (urlsplit(url).netloc or "").lower()
+    if host_matches_suffixes(host, DOUYIN_ASSET_HOST_SUFFIXES):
+        headers["Referer"] = DOUYIN_ASSET_REFERER
+    elif host_matches_suffixes(host, BILIBILI_ASSET_HOST_SUFFIXES):
+        headers["Referer"] = BILIBILI_ASSET_REFERER
+    return headers
 
 
 def collect_platform_declaration_candidates(source: Any, keywords: list[str]) -> list[str]:

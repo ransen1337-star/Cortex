@@ -4,6 +4,8 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+.env
+.env.*
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -13,9 +15,13 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+*.log
+*.tmp
+*.bak
 .idea/
 .vscode/
 .playwright-cli/
 *-card.svg
+.DS_Store
 Thumbs.db
 Desktop.ini

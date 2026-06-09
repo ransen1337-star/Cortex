@@ -5,6 +5,8 @@ from main.services.douyin import DouyinExtractionError
 from main.services.douyin import DouyinParserService
 from main.services.douyin import InvalidDouyinUrlError
 from main.services.models import SourceFile
+from main.services.models import VideoAuthor
+from main.services.models import VideoAuthorVerification
 from main.services.models import VideoAnalysisResponse
 from main.services.models import VideoMetrics
 from main.services.models import VideoSourceFile
@@ -17,6 +19,8 @@ __all__ = [
     "InvalidDouyinUrlError",
     "InvalidBilibiliUrlError",
     "SourceFile",
+    "VideoAuthor",
+    "VideoAuthorVerification",
     "VideoAnalysisResponse",
     "VideoMetrics",
     "VideoSourceFile",

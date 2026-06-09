@@ -3,7 +3,7 @@
 `Cortex`, the Cortex logo, and related visual branding are reserved identifiers
 of the original project author.
 
-This repository's software is licensed under the terms in [LICENSE](LICENSE),
+This repository's source code is licensed under the terms in [LICENSE](LICENSE),
 but that license does not grant trademark rights.
 
 You may:
@@ -11,6 +11,7 @@ You may:
 - refer to the project by name for factual attribution
 - state that your work is based on or derived from Cortex
 - keep the original name when redistributing unmodified copies with the required notices
+- preserve attribution as `Cortex by Ransen1337-star` when redistributing copies
 
 You may not:
 

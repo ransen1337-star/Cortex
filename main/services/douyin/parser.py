@@ -1,5 +1,7 @@
 import json
 import re
+from dataclasses import dataclass
+from html import unescape
 from typing import Any
 from urllib.parse import urlparse
 from urllib.parse import urlsplit
@@ -7,18 +9,21 @@ from urllib.parse import urlsplit
 import httpx
 
 from main.services.models import SourceFile
+from main.services.models import VideoAnalysisResponse
+from main.services.models import VideoAuthor
+from main.services.models import VideoAuthorVerification
+from main.services.models import VideoMetrics
+from main.services.models import VideoSourceFile
 from main.services.share_card import ShareCardAuthor
 from main.services.share_card import ShareCardBranding
 from main.services.share_card import ShareCardData
 from main.services.share_card import ShareCardMetric
 from main.services.share_card import render_share_card_svg
-from main.services.models import VideoAnalysisResponse
-from main.services.models import VideoMetrics
-from main.services.models import VideoSourceFile
 from main.services.utils import build_published_at
-from main.services.utils import collect_platform_declaration_candidates
+from main.services.utils import coerce_float
 from main.services.utils import coerce_int
 from main.services.utils import coerce_string
+from main.services.utils import collect_platform_declaration_candidates
 from main.services.utils import create_http_client
 from main.services.utils import format_count_short
 from main.services.utils import format_duration_clock
@@ -26,14 +31,41 @@ from main.services.utils import normalize_remote_asset_url
 
 
 HTTP_CLIENT = create_http_client(30)
-MOBILE_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+MOBILE_USER_AGENT = (
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+)
+DESKTOP_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+)
 MOBILE_HEADERS = {
     "User-Agent": MOBILE_USER_AGENT,
     "Referer": "https://www.iesdouyin.com/",
     "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
 }
 EXTRACT_URL_PATTERN = re.compile(r"https?://[^\s<>'\"]+")
+META_CONTENT_PATTERN = re.compile(r'<meta[^>]+content="([^"]+)"', re.IGNORECASE)
+PUBLIC_PLAY_COUNT_PATTERNS = (
+    re.compile(r"(?P<count>\d[\d,]*(?:\.\d+)?(?:万|亿)?)\s*(?:次)?(?:播放量?|浏览量?|观看量?)"),
+    re.compile(r"(?:播放量?|浏览量?|观看量?|已播放)\s*(?P<count>\d[\d,]*(?:\.\d+)?(?:万|亿)?)"),
+)
 TRAILING_URL_PUNCTUATION = ".,;!?，。；！？、)]）】>"
+DOUYIN_CDN_HOST_PRIORITIES = {
+    "p11.douyinpic.com": 0,
+    "p11-sign.douyinpic.com": 0,
+    "p26.douyinpic.com": 1,
+    "p26-sign.douyinpic.com": 1,
+    "p3.douyinpic.com": 2,
+    "p3-sign.douyinpic.com": 2,
+}
+
+
+@dataclass(frozen=True)
+class DouyinPageData:
+    item: dict[str, Any]
+    html: str
+    user_profile: dict[str, Any] | None
 
 
 class DouyinExtractionError(Exception):
@@ -52,17 +84,33 @@ class DouyinParserService:
 
     def parse(self, url: str) -> VideoAnalysisResponse:
         input_url = normalize_douyin_url(url)
-        item = fetch_douyin_item(input_url)
-        return build_response(input_url, item)
+        page_data = fetch_douyin_page_data(input_url)
+        return build_response(input_url, page_data)
 
     def build_share_card_svg(self, url: str, asset_proxy_path: str | None = None) -> str:
         input_url = normalize_douyin_url(url)
-        item = fetch_douyin_item(input_url)
-        return render_share_card_svg(build_share_card_data(item), asset_proxy_path=asset_proxy_path)
+        page_data = fetch_douyin_page_data(input_url)
+        return render_share_card_svg(
+            build_share_card_data(
+                page_data.item,
+                user_profile=page_data.user_profile,
+                page_html=page_data.html,
+            ),
+            asset_proxy_path=asset_proxy_path,
+        )
 
 
 def build_mobile_headers() -> dict[str, str]:
     return dict(MOBILE_HEADERS)
+
+
+def build_profile_headers() -> dict[str, str]:
+    return {
+        "User-Agent": DESKTOP_USER_AGENT,
+        "Referer": "https://www.iesdouyin.com/",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    }
 
 
 def normalize_douyin_url(url: str) -> str:
@@ -104,7 +152,7 @@ def is_supported_douyin_url(url: str) -> bool:
     if parsed_url.scheme not in {"http", "https"}:
         return False
     host = (parsed_url.netloc or "").lower()
-    return host == "v.douyin.com" or host == "iesdouyin.com" or host == "www.iesdouyin.com" or host == "www.douyin.com" or host == "douyin.com"
+    return host in {"v.douyin.com", "iesdouyin.com", "www.iesdouyin.com", "www.douyin.com", "douyin.com"}
 
 
 def extract_douyin_video_id(url: str) -> str | None:
@@ -124,16 +172,19 @@ def resolve_douyin_video_id(url: str) -> str | None:
     except httpx.HTTPError:
         try:
             response = HTTP_CLIENT.get(url, headers=MOBILE_HEADERS)
+            response.raise_for_status()
         except httpx.HTTPError:
             return None
-    for candidate in [str(response.url)] + [response.headers.get("location", "")] + [str(item.url) for item in response.history]:
+    redirect_candidates = [str(response.url), response.headers.get("location", "")]
+    redirect_candidates.extend(str(item.url) for item in response.history)
+    for candidate in redirect_candidates:
         video_id = extract_douyin_video_id(candidate)
         if video_id is not None:
             return video_id
     return None
 
 
-def fetch_douyin_item(normalized_url: str) -> dict[str, Any]:
+def fetch_douyin_page_data(normalized_url: str) -> DouyinPageData:
     try:
         response = HTTP_CLIENT.get(normalized_url, headers=MOBILE_HEADERS)
         response.raise_for_status()
@@ -146,18 +197,24 @@ def fetch_douyin_item(normalized_url: str) -> dict[str, Any]:
         router_data = json.loads(router_data_text)
     except json.JSONDecodeError as error:
         raise DouyinExtractionError("Unable to decode data from this Douyin page right now") from error
-    page_payload = router_data.get("loaderData", {}).get("video_(id)/page")
-    if not isinstance(page_payload, dict):
+    page_payload = find_video_page_payload(router_data)
+    if page_payload is None:
         raise DouyinExtractionError("Unable to find the Douyin video payload right now")
     video_info = page_payload.get("videoInfoRes")
     if not isinstance(video_info, dict):
         raise DouyinExtractionError("Unable to find the Douyin video payload right now")
     item_list = video_info.get("item_list")
-    if isinstance(item_list, list) and item_list:
-        item = item_list[0]
-        if isinstance(item, dict):
-            return item
-    raise DouyinExtractionError("This Douyin video is unavailable or cannot be accessed from the public share page")
+    if not isinstance(item_list, list) or not item_list:
+        raise DouyinExtractionError("This Douyin video is unavailable or cannot be accessed from the public share page")
+    item = item_list[0]
+    if not isinstance(item, dict):
+        raise DouyinExtractionError("This Douyin video is unavailable or cannot be accessed from the public share page")
+    author = item.get("author") if isinstance(item.get("author"), dict) else {}
+    return DouyinPageData(
+        item=item,
+        html=response.text,
+        user_profile=fetch_douyin_user_profile(author),
+    )
 
 
 def extract_router_data_text(html: str) -> str | None:
@@ -165,34 +222,71 @@ def extract_router_data_text(html: str) -> str | None:
     start_index = html.find(marker)
     if start_index < 0:
         return None
-    json_start = start_index + len(marker)
-    json_end = html.find("</script>", json_start)
-    if json_end < 0:
+    json_start = html.find("{", start_index + len(marker))
+    if json_start < 0:
         return None
-    return html[json_start:json_end].strip()
+    depth = 0
+    in_string = False
+    escape_next = False
+    for index in range(json_start, len(html)):
+        char = html[index]
+        if in_string:
+            if escape_next:
+                escape_next = False
+            elif char == "\\":
+                escape_next = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+            continue
+        if char == "{":
+            depth += 1
+            continue
+        if char == "}":
+            depth -= 1
+            if depth == 0:
+                return html[json_start : index + 1]
+    return None
 
 
-def build_response(input_url: str, item: dict[str, Any]) -> VideoAnalysisResponse:
+def find_video_page_payload(router_data: dict[str, Any]) -> dict[str, Any] | None:
+    loader_data = router_data.get("loaderData")
+    if not isinstance(loader_data, dict):
+        return None
+    exact_payload = loader_data.get("video_(id)/page")
+    if isinstance(exact_payload, dict):
+        return exact_payload
+    for value in loader_data.values():
+        if isinstance(value, dict) and isinstance(value.get("videoInfoRes"), dict):
+            return value
+    return None
+
+
+def build_response(input_url: str, page_data: DouyinPageData) -> VideoAnalysisResponse:
+    item = page_data.item
     aweme_id = coerce_string(item.get("aweme_id")) or ""
     description = coerce_string(item.get("desc"))
     text_extra = item.get("text_extra")
     statistics = item.get("statistics") if isinstance(item.get("statistics"), dict) else {}
     video_data = item.get("video") if isinstance(item.get("video"), dict) else {}
-    play_count = resolve_douyin_play_count(statistics)
-    display_title = build_douyin_display_title(description, text_extra) or aweme_id
+    author = item.get("author") if isinstance(item.get("author"), dict) else {}
+    verification = resolve_douyin_verification(author, page_data.user_profile)
     return VideoAnalysisResponse(
         product="Cortex",
         platform="douyin",
         input_url=input_url,
         canonical_url=f"https://www.douyin.com/video/{aweme_id}",
         video_id=aweme_id,
-        title=display_title,
+        title=build_douyin_display_title(description, text_extra) or aweme_id,
         description=description,
         declaration=extract_douyin_declaration(item),
         duration_seconds=build_duration_seconds(video_data.get("duration")),
         published_at=build_published_at(item.get("create_time")),
+        author=build_douyin_author(author, page_data.user_profile, verification),
         metrics=VideoMetrics(
-            play_count=play_count,
+            play_count=resolve_douyin_play_count(statistics, page_data.html),
             danmaku_count=None,
             comment_count=coerce_int(statistics.get("comment_count")),
             like_count=coerce_int(statistics.get("digg_count")),
@@ -205,16 +299,19 @@ def build_response(input_url: str, item: dict[str, Any]) -> VideoAnalysisRespons
     )
 
 
-def build_share_card_data(item: dict[str, Any], user_profile: dict[str, Any] | None = None) -> ShareCardData:
+def build_share_card_data(
+    item: dict[str, Any],
+    user_profile: dict[str, Any] | None = None,
+    page_html: str | None = None,
+) -> ShareCardData:
     aweme_id = coerce_string(item.get("aweme_id")) or ""
-    description = coerce_string(item.get("desc")) or aweme_id
+    description = coerce_string(item.get("desc"))
     text_extra = item.get("text_extra")
     statistics = item.get("statistics") if isinstance(item.get("statistics"), dict) else {}
     video_data = item.get("video") if isinstance(item.get("video"), dict) else {}
     author = item.get("author") if isinstance(item.get("author"), dict) else {}
-    duration_seconds = build_duration_seconds_int(video_data.get("duration"))
-    play_count = resolve_douyin_play_count(statistics)
     verification = resolve_douyin_verification(author, user_profile)
+    duration_seconds = build_duration_seconds_int(video_data.get("duration"))
     return ShareCardData(
         title=build_douyin_display_title(description, text_extra) or aweme_id,
         canonical_url=f"https://www.douyin.com/video/{aweme_id}",
@@ -222,7 +319,7 @@ def build_share_card_data(item: dict[str, Any], user_profile: dict[str, Any] | N
         cover_layout="portrait",
         author=ShareCardAuthor(
             name=coerce_string(author.get("nickname")) or "Douyin Creator",
-            avatar_url=resolve_author_avatar_url(author),
+            avatar_url=resolve_author_avatar_url(author, user_profile),
             certification_icon_markup=build_douyin_verification_icon_markup(verification["theme"]),
             certification_text=verification["text"],
         ),
@@ -235,7 +332,7 @@ def build_share_card_data(item: dict[str, Any], user_profile: dict[str, Any] | N
         ],
         secondary_metrics=[
             ShareCardMetric(label="时长", value=format_duration_clock(duration_seconds) or "--:--"),
-            ShareCardMetric(label="播放", value=format_count_short(play_count)),
+            ShareCardMetric(label="播放", value=format_count_short(resolve_douyin_play_count(statistics, page_html))),
             ShareCardMetric(label="评论", value=format_count_short(coerce_int(statistics.get("comment_count")))),
         ],
         branding=ShareCardBranding(
@@ -264,7 +361,7 @@ def build_video_source(video_data: dict[str, Any]) -> VideoSourceFile:
         source_mode="single_file",
         audio_url=None,
         format_id="douyin-play",
-        quality=extract_ratio_label(play_url),
+        quality=extract_ratio_label(play_url, video_data),
         container="mp4",
         width=coerce_int(video_data.get("width")),
         height=coerce_int(video_data.get("height")),
@@ -301,7 +398,11 @@ def resolve_douyin_play_url(play_url: str) -> str | None:
         return None
     normalized_play_url = normalized_play_url.replace("/playwm/", "/play/")
     try:
-        response = HTTP_CLIENT.get(normalized_play_url, headers={"User-Agent": MOBILE_USER_AGENT}, follow_redirects=False)
+        response = HTTP_CLIENT.get(
+            normalized_play_url,
+            headers={"User-Agent": MOBILE_USER_AGENT},
+            follow_redirects=False,
+        )
     except httpx.HTTPError:
         return normalized_play_url
     location = response.headers.get("location")
@@ -315,15 +416,21 @@ def resolve_douyin_play_url(play_url: str) -> str | None:
 def build_cover_source(video_data: dict[str, Any]) -> SourceFile:
     cover = video_data.get("cover") if isinstance(video_data.get("cover"), dict) else {}
     url_list = cover.get("url_list") if isinstance(cover.get("url_list"), list) else []
-    return SourceFile(url=choose_best_cover_url(url_list), request_headers=None)
+    return SourceFile(
+        url=choose_best_cover_url(url_list),
+        request_headers=None,
+    )
 
 
-def resolve_douyin_play_count(statistics: dict[str, Any]) -> int | None:
+def resolve_douyin_play_count(statistics: dict[str, Any], page_html: str | None = None) -> int | None:
     play_count = coerce_int(statistics.get("play_count"))
+    if play_count is not None and play_count > 0:
+        return play_count
+    fallback_play_count = extract_public_play_count_from_html(page_html)
+    if fallback_play_count is not None:
+        return fallback_play_count
     if play_count is None:
         return None
-    if play_count > 0:
-        return play_count
     interaction_counts = (
         coerce_int(statistics.get("digg_count")),
         coerce_int(statistics.get("comment_count")),
@@ -335,6 +442,40 @@ def resolve_douyin_play_count(statistics: dict[str, Any]) -> int | None:
     return play_count
 
 
+def extract_public_play_count_from_html(page_html: str | None) -> int | None:
+    if not page_html:
+        return None
+    search_spaces = [unescape(content) for content in META_CONTENT_PATTERN.findall(page_html)]
+    search_spaces.append(unescape(page_html))
+    for text in search_spaces:
+        for pattern in PUBLIC_PLAY_COUNT_PATTERNS:
+            match = pattern.search(text)
+            if match is None:
+                continue
+            play_count = parse_public_count_text(match.group("count"))
+            if play_count is not None:
+                return play_count
+    return None
+
+
+def parse_public_count_text(value: str | None) -> int | None:
+    text = coerce_string(value)
+    if text is None:
+        return None
+    normalized_text = text.replace(",", "")
+    multiplier = 1
+    if normalized_text.endswith("万"):
+        multiplier = 10000
+        normalized_text = normalized_text[:-1]
+    elif normalized_text.endswith("亿"):
+        multiplier = 100000000
+        normalized_text = normalized_text[:-1]
+    try:
+        return int(float(normalized_text) * multiplier)
+    except ValueError:
+        return None
+
+
 def choose_first_url(urls: list[Any]) -> str | None:
     for url in urls:
         normalized_url = normalize_remote_asset_url(coerce_string(url))
@@ -343,12 +484,49 @@ def choose_first_url(urls: list[Any]) -> str | None:
     return None
 
 
+def choose_preferred_douyin_asset_url(urls: list[Any]) -> str | None:
+    normalized_urls: list[str] = []
+    for url in urls:
+        normalized_url = normalize_remote_asset_url(coerce_string(url))
+        if normalized_url is not None and normalized_url not in normalized_urls:
+            normalized_urls.append(normalized_url)
+    if not normalized_urls:
+        return None
+    prioritized_urls = sorted(
+        enumerate(normalized_urls),
+        key=lambda item: (resolve_douyin_asset_priority(item[1]), item[0]),
+    )
+    return prioritized_urls[0][1]
+
+
+def resolve_douyin_asset_priority(url: str) -> int:
+    try:
+        host = urlsplit(url).netloc.lower()
+    except ValueError:
+        return len(DOUYIN_CDN_HOST_PRIORITIES) + 1
+    return DOUYIN_CDN_HOST_PRIORITIES.get(host, len(DOUYIN_CDN_HOST_PRIORITIES))
+
+
+def choose_best_cover_url(urls: list[Any]) -> str | None:
+    normalized_urls: list[str] = []
+    for url in urls:
+        normalized_url = normalize_remote_asset_url(coerce_string(url))
+        if normalized_url is not None:
+            normalized_urls.append(normalized_url)
+    if not normalized_urls:
+        return None
+    for normalized_url in normalized_urls:
+        if re.search(r"\.(?:jpe?g|png)(?:\?|$)", normalized_url, re.IGNORECASE):
+            return normalized_url
+    return normalized_urls[0]
+
+
 def fetch_douyin_user_profile(author: Any) -> dict[str, Any] | None:
     if not isinstance(author, dict):
         return None
-    params: dict[str, str] = {}
     sec_uid = coerce_string(author.get("sec_uid"))
     unique_id = coerce_string(author.get("unique_id"))
+    params: dict[str, str] = {}
     if sec_uid:
         params["sec_uid"] = sec_uid
     elif unique_id:
@@ -362,9 +540,9 @@ def fetch_douyin_user_profile(author: Any) -> dict[str, Any] | None:
             headers=build_profile_headers(),
         )
         response.raise_for_status()
-    except httpx.HTTPError:
+        payload = response.json()
+    except (httpx.HTTPError, ValueError):
         return None
-    payload = response.json()
     user_info = payload.get("user_info")
     if not isinstance(user_info, dict):
         return None
@@ -380,27 +558,35 @@ def extract_url_list(source: Any) -> list[Any]:
     return url_list
 
 
-def resolve_author_avatar_url(author: dict[str, Any]) -> str | None:
-    for key in ("avatar_medium", "avatar_thumb"):
-        avatar_url = choose_first_url(extract_url_list(author.get(key)))
-        if avatar_url is not None:
-            return avatar_url
-    return None
+def resolve_author_avatar_url(author: dict[str, Any], user_profile: dict[str, Any] | None = None) -> str | None:
+    avatar_candidates: list[Any] = []
+    for source in (author, user_profile or {}):
+        for key in ("avatar_larger", "avatar_medium", "avatar_thumb"):
+            avatar_candidates.extend(extract_url_list(source.get(key)))
+    return choose_preferred_douyin_asset_url(avatar_candidates)
 
 
 def resolve_douyin_verification(author: dict[str, Any], user_profile: dict[str, Any] | None) -> dict[str, str | None]:
     profile = user_profile or {}
-    account_cert_info = parse_account_cert_info(profile.get("account_cert_info"))
-    enterprise_verify_reason = (
-        coerce_string(author.get("enterprise_verify_reason"))
-        or coerce_string(profile.get("enterprise_verify_reason"))
+    account_cert_info = parse_account_cert_info(author.get("account_cert_info"))
+    if not account_cert_info:
+        account_cert_info = parse_account_cert_info(profile.get("account_cert_info"))
+    enterprise_verify_reason = pick_first_non_none(
+        coerce_string(author.get("enterprise_verify_reason")),
+        coerce_string(profile.get("enterprise_verify_reason")),
     )
-    custom_verify = coerce_string(author.get("custom_verify")) or coerce_string(profile.get("custom_verify"))
+    custom_verify = pick_first_non_none(
+        coerce_string(author.get("custom_verify")),
+        coerce_string(profile.get("custom_verify")),
+    )
     label_text = coerce_string(account_cert_info.get("label_text"))
-    verification_type = coerce_int(author.get("verification_type")) or coerce_int(profile.get("verification_type"))
-    is_biz_account = bool(coerce_int(account_cert_info.get("is_biz_account")))
+    verification_type = pick_first_non_none(
+        coerce_int(author.get("verification_type")),
+        coerce_int(profile.get("verification_type")),
+    )
+    is_biz_account = bool(pick_first_non_none(coerce_int(account_cert_info.get("is_biz_account")), 0))
     label_style = coerce_int(account_cert_info.get("label_style"))
-    certification_text = enterprise_verify_reason or custom_verify or label_text
+    certification_text = pick_first_non_none(enterprise_verify_reason, custom_verify, label_text)
     certification_theme: str | None = None
     if label_style == 5 or enterprise_verify_reason:
         certification_theme = "red"
@@ -427,13 +613,97 @@ def resolve_douyin_verification(author: dict[str, Any], user_profile: dict[str, 
 def parse_account_cert_info(value: Any) -> dict[str, Any]:
     if isinstance(value, dict):
         return value
-    if not isinstance(value, str) or not value.strip():
+    if not isinstance(value, str):
         return {}
     try:
-        parsed = json.loads(value)
+        parsed_value = json.loads(value)
     except json.JSONDecodeError:
         return {}
-    return parsed if isinstance(parsed, dict) else {}
+    if isinstance(parsed_value, dict):
+        return parsed_value
+    return {}
+
+
+def build_douyin_author(
+    author: dict[str, Any],
+    user_profile: dict[str, Any] | None,
+    verification: dict[str, str | None],
+) -> VideoAuthor | None:
+    profile = user_profile or {}
+    name = pick_first_non_none(
+        coerce_string(author.get("nickname")),
+        coerce_string(profile.get("nickname")),
+    )
+    unique_id = pick_first_non_none(
+        coerce_string(author.get("unique_id")),
+        coerce_string(profile.get("unique_id")),
+        coerce_string(author.get("short_id")),
+        coerce_string(profile.get("short_id")),
+    )
+    sec_uid = pick_first_non_none(
+        coerce_string(author.get("sec_uid")),
+        coerce_string(profile.get("sec_uid")),
+    )
+    profile_url = build_douyin_profile_url(sec_uid)
+    avatar_url = resolve_author_avatar_url(author, profile)
+    signature = pick_first_non_none(
+        coerce_string(author.get("signature")),
+        coerce_string(profile.get("signature")),
+    )
+    follower_count = pick_first_non_none(
+        coerce_int(profile.get("mplatform_followers_count")),
+        coerce_int(author.get("mplatform_followers_count")),
+        coerce_int(profile.get("follower_count")),
+        coerce_int(author.get("follower_count")),
+    )
+    total_favorited = pick_first_non_none(
+        coerce_int(profile.get("total_favorited")),
+        coerce_int(author.get("total_favorited")),
+    )
+    verification_payload = build_douyin_author_verification(verification)
+    if not any(
+        (
+            name,
+            unique_id,
+            sec_uid,
+            profile_url,
+            avatar_url,
+            signature,
+            follower_count,
+            total_favorited,
+            verification_payload,
+        )
+    ):
+        return None
+    return VideoAuthor(
+        name=name,
+        unique_id=unique_id,
+        sec_uid=sec_uid,
+        profile_url=profile_url,
+        avatar_url=avatar_url,
+        signature=signature,
+        follower_count=follower_count,
+        total_favorited=total_favorited,
+        verification=verification_payload,
+    )
+
+
+def build_douyin_author_verification(verification: dict[str, str | None]) -> VideoAuthorVerification | None:
+    theme = verification["theme"]
+    text = verification["text"]
+    if not theme and not text:
+        return None
+    return VideoAuthorVerification(
+        is_verified=True,
+        theme=theme,
+        text=text,
+    )
+
+
+def build_douyin_profile_url(sec_uid: str | None) -> str | None:
+    if not sec_uid:
+        return None
+    return f"https://www.douyin.com/user/{sec_uid}"
 
 
 def build_douyin_verification_icon_markup(theme: str | None) -> str:
@@ -448,6 +718,16 @@ def build_douyin_verification_icon_markup(theme: str | None) -> str:
     return ""
 
 
+def build_douyin_display_title(description: str | None, text_extra: Any) -> str | None:
+    description_text = coerce_string(description)
+    if description_text:
+        return description_text.splitlines()[0].strip()
+    tags = build_tag_names(text_extra)
+    if not tags:
+        return None
+    return " ".join(f"#{tag}" for tag in tags[:3])
+
+
 def build_tag_names(text_extra: Any) -> list[str]:
     if not isinstance(text_extra, list):
         return []
@@ -456,111 +736,45 @@ def build_tag_names(text_extra: Any) -> list[str]:
         if not isinstance(item, dict):
             continue
         tag_name = coerce_string(item.get("hashtag_name"))
-        if not tag_name or tag_name in tag_names:
-            continue
-        tag_names.append(tag_name)
+        if tag_name and tag_name not in tag_names:
+            tag_names.append(tag_name)
     return tag_names
 
 
-def build_douyin_display_title(description: str | None, text_extra: Any) -> str | None:
-    raw_text = coerce_string(description)
-    tag_names = build_tag_names(text_extra)
-    if raw_text is None:
-        return " ".join(tag_names[:4]) or None
-    if not isinstance(text_extra, list):
-        return normalize_douyin_title_text(strip_douyin_hashtag_text(raw_text)) or " ".join(tag_names[:4]) or raw_text
-    removal_ranges: list[tuple[int, int]] = []
-    for item in text_extra:
-        if not isinstance(item, dict):
-            continue
-        if coerce_int(item.get("type")) != 1:
-            continue
-        start = coerce_int(item.get("start"))
-        end = coerce_int(item.get("end"))
-        hashtag_name = coerce_string(item.get("hashtag_name"))
-        if start is None or end is None or start < 0 or end <= start or end > len(raw_text) or not hashtag_name:
-            continue
-        range_start = start
-        while range_start > 0 and raw_text[range_start - 1].isspace():
-            range_start -= 1
-        removal_ranges.append((range_start, end))
-    if not removal_ranges:
-        return normalize_douyin_title_text(strip_douyin_hashtag_text(raw_text)) or " ".join(tag_names[:4]) or raw_text
-    merged_ranges = merge_ranges(removal_ranges)
-    parts: list[str] = []
-    cursor = 0
-    for start, end in merged_ranges:
-        if cursor < start:
-            parts.append(raw_text[cursor:start])
-        cursor = end
-    if cursor < len(raw_text):
-        parts.append(raw_text[cursor:])
-    cleaned_text = normalize_douyin_title_text("".join(parts))
-    return cleaned_text or normalize_douyin_title_text(strip_douyin_hashtag_text(raw_text)) or " ".join(tag_names[:4]) or raw_text
-
-
-def merge_ranges(ranges: list[tuple[int, int]]) -> list[tuple[int, int]]:
-    if not ranges:
-        return []
-    sorted_ranges = sorted(ranges, key=lambda value: (value[0], value[1]))
-    merged_ranges = [sorted_ranges[0]]
-    for start, end in sorted_ranges[1:]:
-        last_start, last_end = merged_ranges[-1]
-        if start <= last_end:
-            merged_ranges[-1] = (last_start, max(last_end, end))
-            continue
-        merged_ranges.append((start, end))
-    return merged_ranges
-
-
-def strip_douyin_hashtag_text(text: str) -> str:
-    return re.sub(r"(?:^|\s)#[^\s#]+", " ", text)
-
-
-def normalize_douyin_title_text(text: str) -> str:
-    normalized = re.sub(r"\s+", " ", text).strip(" \n\r\t#")
-    normalized = re.sub(r"\s([,.!?，。！？；：])", r"\1", normalized)
-    return normalized.strip()
-
-
-def choose_best_cover_url(urls: list[Any]) -> str | None:
-    normalized_urls = [normalize_remote_asset_url(coerce_string(url)) for url in urls]
-    normalized_urls = [url for url in normalized_urls if url is not None]
-    if not normalized_urls:
+def build_duration_seconds(value: Any) -> float | None:
+    duration = coerce_float(value)
+    if duration is None:
         return None
-    for url in normalized_urls:
-        if ".jpeg" in url or ".jpg" in url:
-            return url
-    return normalized_urls[0]
+    if duration > 1000:
+        duration = duration / 1000
+    return round(duration, 3)
 
 
-def build_duration_seconds(duration_ms: Any) -> float | None:
-    duration_value = coerce_int(duration_ms)
-    if duration_value is None:
+def build_duration_seconds_int(value: Any) -> int | None:
+    duration_seconds = build_duration_seconds(value)
+    if duration_seconds is None:
         return None
-    return duration_value / 1000
+    return max(0, int(duration_seconds))
 
 
-def build_duration_seconds_int(duration_ms: Any) -> int | None:
-    duration_value = coerce_int(duration_ms)
-    if duration_value is None:
-        return None
-    return duration_value // 1000
+def extract_ratio_label(play_url: str | None, video_data: dict[str, Any] | None = None) -> str | None:
+    if play_url:
+        ratio_match = re.search(r"(?:[?&]ratio=)([\da-zA-Z]+)", play_url)
+        if ratio_match is not None:
+            return ratio_match.group(1).lower()
+    if isinstance(video_data, dict):
+        width = coerce_int(video_data.get("width"))
+        height = coerce_int(video_data.get("height"))
+        if width is not None and height is not None:
+            return f"{min(width, height)}p"
+    return None
 
 
-def build_profile_headers() -> dict[str, str]:
-    return {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-        "Referer": "https://www.iesdouyin.com/",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-    }
-
-
-def extract_ratio_label(url: str) -> str | None:
-    ratio_match = re.search(r"[?&]ratio=([^&]+)", url)
-    if ratio_match is None:
-        return None
-    return ratio_match.group(1)
+def pick_first_non_none(*values: Any) -> Any:
+    for value in values:
+        if value is not None:
+            return value
+    return None
 
 
 DOUYIN_ICON_LIKE = '<svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><path d="M14 24.8l-1.5-1.3C6 17.9 2 14.3 2 9.8 2 6.2 4.8 3.4 8.4 3.4c2 0 3.9.9 5.1 2.4 1.2-1.5 3.1-2.4 5.1-2.4 3.6 0 6.4 2.8 6.4 6.4 0 4.5-4 8.1-10.5 13.7L14 24.8z" fill="#9499A0"/></svg>'

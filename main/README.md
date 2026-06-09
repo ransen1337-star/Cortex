@@ -4,7 +4,7 @@
 
 # Cortex
 
-**Cortex, a clean public video analysis API for Bilibili and Douyin**
+**Cortex, a clean public source code project for Bilibili and Douyin video analysis**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -28,14 +28,18 @@
 | English | [README.en.md](README.en.md) |
 | 简体中文 | [README.zh-CN.md](README.zh-CN.md) |
 
+## Overview
+
+Cortex is a public source code project that parses public Bilibili and Douyin links, returns normalized metadata, and generates SVG share cards.
+
+The repository root only keeps `start.py`. Source code, assets, docs, and runtime dependencies live under `main/`.
+
 ## Quick Start
 
 ```bash
 pip install -r main/requirements.txt
 python start.py
 ```
-
-The repository root only keeps `start.py`. Application code, assets, docs, and runtime dependencies live under `main/`.
 
 > #### <img src="assets/callout-important.svg" alt="" width="18" align="absmiddle"> IMPORTANT
 >
@@ -53,12 +57,52 @@ The repository root only keeps `start.py`. Application code, assets, docs, and r
 > - Prefer full public URLs
 > - Use `/docs` for quick endpoint testing
 
+## Features
+
+- Parse public Bilibili and Douyin video links
+- Filter and recognize supported links before platform parsing
+- Return a shared response structure for downstream use
+- Generate SVG share cards for both platforms
+- Keep the root structure minimal with `start.py` plus `main/`
+
+## Supported Example Links
+
+- Bilibili examples only use `https://www.bilibili.com/video/BV15kVJzYE5N/`
+- Douyin examples only use `https://www.iesdouyin.com/share/video/7634486870264597775/`
+
+## Project Structure
+
+```text
+main/
+|-- api/
+|-- assets/
+|-- core/
+|-- services/
+|-- tests/
+|-- README.md
+|-- README.en.md
+|-- README.zh-CN.md
+|-- requirements.txt
+`-- __init__.py
+```
+
+- `api/` contains FastAPI routes and example payload definitions
+- `core/` contains branding and runtime configuration helpers
+- `services/` contains platform parsers, shared models, utilities, and share-card rendering
+- `tests/` contains API and parser regression tests
+
+## Project Attribution
+
+Redistributions and modified copies must keep the project attribution as `Cortex by Ransen1337-star`.
+
 ## License
 
 Cortex is source-available under `PolyForm Noncommercial 1.0.0`.
 
+- English license: [../LICENSE](../LICENSE)
+- Chinese reference: [../LICENSE.zh-CN.md](../LICENSE.zh-CN.md)
 - No commercial use without separate permission
-- Redistributing copies or modified versions must keep attribution to `Ransen1337-star`
+- Redistributing copies or modified versions must keep attribution as `Cortex by Ransen1337-star`
 - Required notices must be preserved from the repository root `NOTICE`
 - The `Cortex` name and logo are not licensed as trademarks
 
