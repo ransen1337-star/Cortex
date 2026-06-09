@@ -1,0 +1,6 @@
+fastapi
+httpx
+pillow
+pydantic
+uvicorn
+yt-dlp

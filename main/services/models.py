@@ -1,0 +1,54 @@
+from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class VideoMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    play_count: int | None = Field(default=None, description="Video play count")
+    danmaku_count: int | None = Field(default=None, description="Danmaku count when the platform provides it")
+    comment_count: int | None = Field(default=None, description="Comment count")
+    like_count: int | None = Field(default=None, description="Like count")
+    share_count: int | None = Field(default=None, description="Share count")
+    favorite_count: int | None = Field(default=None, description="Favorite or collect count")
+    coin_count: int | None = Field(default=None, description="Coin count when the platform provides it")
+
+
+class SourceFile(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    url: str | None = Field(default=None, description="Direct source file url")
+    request_headers: dict[str, str] | None = Field(default=None, description="Request headers required to access this source url")
+
+
+class VideoSourceFile(SourceFile):
+    model_config = ConfigDict(extra="forbid")
+
+    source_mode: Literal["single_file", "separate_streams"] = Field(description="Whether the video source is a single playable file or a separated video stream")
+    audio_url: str | None = Field(default=None, description="Direct audio source url when the source mode is separate_streams")
+    format_id: str | None = Field(default=None, description="Platform-specific format id")
+    quality: str | None = Field(default=None, description="Human-readable quality label")
+    container: str | None = Field(default=None, description="Container format such as mp4 or m4s")
+    width: int | None = Field(default=None, description="Video width in pixels")
+    height: int | None = Field(default=None, description="Video height in pixels")
+    fps: float | None = Field(default=None, description="Frames per second when available")
+
+
+class VideoAnalysisResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    product: Literal["Video Analysis"] = Field(description="Product name")
+    platform: Literal["bilibili", "douyin"] = Field(description="Matched platform")
+    input_url: str = Field(description="Normalized input url used for parsing")
+    canonical_url: str = Field(description="Canonical platform video url")
+    video_id: str = Field(description="Platform video id")
+    title: str = Field(description="Video title")
+    description: str | None = Field(default=None, description="Video description")
+    declaration: str | None = Field(default=None, description="Platform-provided content declaration or risk label")
+    duration_seconds: float | None = Field(default=None, description="Video duration in seconds")
+    published_at: datetime | None = Field(default=None, description="Publish time in ISO 8601 format")
+    metrics: VideoMetrics = Field(description="Video metrics")
+    video_source: VideoSourceFile = Field(description="Direct video source information")
+    cover_source: SourceFile = Field(description="Direct cover source information")
