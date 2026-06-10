@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="main/assets/branding/cortex-logo.svg" alt="Cortex 标志" width="620">
+<img src="main/assets/branding/cortex-logo.svg" alt="Cortex 标志" width="420">
 
 # Cortex
 

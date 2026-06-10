@@ -1,34 +1,40 @@
-<svg width="1280" height="320" viewBox="0 0 1280 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cortex-logo-title cortex-logo-desc">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 505.67 216.08" role="img" aria-labelledby="cortex-logo-title cortex-logo-desc">
   <title id="cortex-logo-title">Cortex logo</title>
-  <desc id="cortex-logo-desc">Cortex wordmark with a bold rounded C monogram and matching outlined ortex lettering on a transparent background.</desc>
+  <desc id="cortex-logo-desc">Cortex wordmark with a blue C mark, centered dark dot, and ortex lettering on a transparent background.</desc>
   <defs>
-    <linearGradient id="cortex-logo-gradient" x1="72" y1="36" x2="1188" y2="290" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0F172A"/>
-      <stop offset="0.5" stop-color="#0F766E"/>
-      <stop offset="1" stop-color="#22C55E"/>
-    </linearGradient>
+    <style>
+      .wordmark {
+        fill: #111827;
+        font-family: Arial-BoldMT, Arial, sans-serif;
+        font-size: 120.7px;
+        font-weight: 700;
+        isolation: isolate;
+        letter-spacing: 0;
+      }
+
+      .ink {
+        fill: #111827;
+      }
+
+      .paper {
+        fill: #fff;
+      }
+
+      .brand {
+        fill: #1658ff;
+      }
+    </style>
   </defs>
-
-  <g transform="translate(60 26)">
-    <path d="M186 46C160 23 126 12 90 12C28 12 -12 58 -12 134C-12 210 28 256 90 256C125 256 159 245 186 222" stroke="url(#cortex-logo-gradient)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M150 78C136 66 116 60 98 60C58 60 32 92 32 134C32 176 58 208 98 208C116 208 135 202 150 190" stroke="#D8FFF4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M178 222H246" stroke="url(#cortex-logo-gradient)" stroke-width="14" stroke-linecap="round"/>
-
-    <g transform="translate(306 48)" stroke="#0F172A" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <ellipse cx="64" cy="86" rx="48" ry="42"/>
-      <path d="M154 128V44"/>
-      <path d="M154 82C154 60 170 44 192 44H210C230 44 244 58 244 76C244 94 230 108 210 108H154"/>
-      <path d="M280 44V128"/>
-      <path d="M244 44H316"/>
-      <path d="M438 86C438 62 420 44 394 44C368 44 350 62 350 86C350 110 368 128 394 128C414 128 430 120 438 106"/>
-      <path d="M362 86H428"/>
-      <path d="M486 44L548 128"/>
-      <path d="M548 44L486 128"/>
-    </g>
-
-    <g transform="translate(306 48)" stroke="url(#cortex-logo-gradient)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <path d="M356 108C366 120 379 126 394 126C409 126 422 120 432 108"/>
-      <path d="M492 120L542 52"/>
-    </g>
-  </g>
+  <polygon class="paper" points="160 146.71 155.47 148 154.55 148.27 153.95 146.16 159.4 144.61 160 146.71"/>
+  <path class="brand" d="M211.02,69.64C189.61,13.88,126.61-14.12,70.31,7.09,14.02,28.3-14.26,90.69,7.16,146.45c21.42,55.76,84.41,83.76,140.71,62.55,29.1-10.96,52.09-33.73,63.16-62.55h-58.58c-21.42,23.71-58.19,25.74-82.13,4.53-23.94-21.21-25.99-57.63-4.58-81.34s58.19-25.74,82.13-4.53c1.61,1.43,3.14,2.94,4.58,4.53h58.58Z"/>
+  <text class="wordmark" transform="translate(183.98 136.26) scale(1.1 1)">ortex</text>
+  <polygon class="paper" points="153.23 69.05 202.64 50.63 214.73 67.84 194.49 81.64 153.23 69.05"/>
+  <polyline class="paper" points="153.26 145.86 207.88 154.9 217.62 141.61 160.81 133.82"/>
+  <ellipse class="paper" cx="106.33" cy="107.46" rx="64.89" ry="62.1"/>
+  <ellipse class="ink" cx="106.33" cy="107.46" rx="29.08" ry="28.8"/>
+  <polyline class="brand" points="154.35 65.7 154.91 66.14 155.02 65.98"/>
+  <polyline class="paper" points="201.72 50.82 201.82 51.17 201.49 51.22 201.5 50.71"/>
+  <path class="brand" d="M201.51,50.67s.29.32-.08.41.08-.41.08-.41Z"/>
+  <path class="brand" d="M207.15,154.78s.36.03.1.32"/>
 </svg>
