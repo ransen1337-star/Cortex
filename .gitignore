@@ -23,6 +23,8 @@ build/
 .playwright-cli/
 main/assets/_debug-*
 main/assets/_tmp-*
+main/assets/docs/_debug-*
+main/assets/docs/_tmp-*
 .DS_Store
 Thumbs.db
 Desktop.ini

@@ -1,8 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="cortex-mark-title cortex-mark-desc">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 0 232 216.08" role="img" aria-labelledby="cortex-mark-title cortex-mark-desc">
   <title id="cortex-mark-title">Cortex mark</title>
-  <desc id="cortex-mark-desc">Standalone Cortex C mark with a centered navy dot on a transparent background.</desc>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M188 56A88 88 0 0 0 52 128A88 88 0 0 0 188 200" stroke="#2F6BFF" stroke-width="40"/>
-    <circle cx="120" cy="128" r="18" fill="#14263F"/>
-  </g>
+  <desc id="cortex-mark-desc">Standalone Cortex C mark with a blue shell, white inner counter, and dark center dot.</desc>
+  <path fill="#1658ff" d="M211.02,69.64C189.61,13.88,126.61-14.12,70.31,7.09,14.02,28.3-14.26,90.69,7.16,146.45c21.42,55.76,84.41,83.76,140.71,62.55,29.1-10.96,52.09-33.73,63.16-62.55h-58.58c-21.42,23.71-58.19,25.74-82.13,4.53-23.94-21.21-25.99-57.63-4.58-81.34s58.19-25.74,82.13-4.53c1.61,1.43,3.14,2.94,4.58,4.53h58.58Z"/>
+  <polygon fill="#fff" points="153.23 69.05 202.64 50.63 214.73 67.84 194.49 81.64 153.23 69.05"/>
+  <polyline fill="#fff" points="153.26 145.86 207.88 154.9 217.62 141.61 160.81 133.82"/>
+  <ellipse fill="#fff" cx="106.33" cy="107.46" rx="64.89" ry="62.1"/>
+  <ellipse fill="#111827" cx="106.33" cy="107.46" rx="29.08" ry="28.8"/>
 </svg>
