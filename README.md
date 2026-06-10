@@ -20,11 +20,13 @@
   <img src="https://img.shields.io/badge/Output-JSON%20%2B%20SVG%2FPNG-2563EB" alt="Output">
 </p>
 
+**Keywords:** `Bilibili API` · `Douyin API` · `video analysis API` · `video parser` · `share card generator` · `B站视频解析` · `抖音视频解析`
+
 </div>
 
 ## Overview
 
-Cortex is an API-only FastAPI project for public Bilibili and Douyin video analysis.
+Cortex is an API-only FastAPI project for public Bilibili and Douyin video analysis, video parsing, metadata extraction, and share-card rendering.
 
 It provides:
 

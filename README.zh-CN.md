@@ -12,11 +12,13 @@
   <a href="README.en.md"><strong>English</strong></a>
 </p>
 
+**关键词：** `B站视频解析` · `抖音视频解析` · `视频解析 API` · `视频链接解析` · `FastAPI` · `分享卡片生成`
+
 </div>
 
 ## 简介
 
-Cortex 是一个只做 API 的 FastAPI 项目，专注于 Bilibili 与抖音公开视频解析。
+Cortex 是一个只做 API 的 FastAPI 项目，专注于 Bilibili 与抖音公开视频解析、视频链接解析、元数据提取与分享卡片生成。
 
 它提供：
 

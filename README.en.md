@@ -12,11 +12,13 @@
   <a href="README.zh-CN.md"><strong>简体中文</strong></a>
 </p>
 
+**Keywords:** `bilibili api` · `douyin api` · `video analysis api` · `video parser` · `fastapi` · `share card generator`
+
 </div>
 
 ## Overview
 
-Cortex is a compact FastAPI codebase for public Bilibili and Douyin video analysis.
+Cortex is a compact FastAPI codebase for public Bilibili and Douyin video analysis, video parsing, metadata extraction, and share-card rendering.
 
 It provides:
 
