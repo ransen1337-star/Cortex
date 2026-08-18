@@ -1,6 +1,7 @@
 """Centralized Cortex project branding."""
 
 PROJECT_NAME = "Cortex"
+PROJECT_VERSION = "0.5.0"
 PROJECT_AUTHOR = "Ransen1337-star"
 PROJECT_SIGNATURE = f"{PROJECT_NAME} by {PROJECT_AUTHOR}"
 PROJECT_TAGLINE = "Public Bilibili and Douyin video analysis, video parser, and share-card API source project"
