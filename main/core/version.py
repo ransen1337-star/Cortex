@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import os
 import re
 import sys
+import time
 from typing import Literal
 
 import httpx
@@ -29,10 +30,15 @@ class VersionCheckResult:
 
 def check_for_update(*, client: httpx.Client | None = None) -> VersionCheckResult:
     source_url = os.getenv("CORTEX_VERSION_SOURCE_URL", DEFAULT_VERSION_SOURCE_URL)
+    cache_separator = "&" if "?" in source_url else "?"
+    request_url = f"{source_url}{cache_separator}cortex_version_check={int(time.time())}"
     http_client = client or httpx.Client(follow_redirects=True, timeout=5)
     should_close = client is None
     try:
-        response = http_client.get(source_url, headers={"Accept": "text/plain"})
+        response = http_client.get(
+            request_url,
+            headers={"Accept": "text/plain", "Cache-Control": "no-cache"},
+        )
         response.raise_for_status()
         latest_version = extract_version(response.text)
     except (httpx.HTTPError, ValueError) as error:
@@ -96,10 +102,10 @@ def log_version_check(result: VersionCheckResult) -> None:
     cyan = "\033[1;46;30m" if use_color else ""
     red = "\033[1;41;37m" if use_color else ""
     if result.status == "update_available":
-        print(f"{yellow} VERSION UPDATE AVAILABLE {reset} {bold}{result.current_version} -> {result.latest_version}{reset}")
+        print(f"{yellow} VERSION UPDATE AVAILABLE {reset} {bold}{result.current_version} -> {result.latest_version}{reset}", flush=True)
     elif result.status == "local_ahead":
-        print(f"{cyan} LOCAL VERSION AHEAD {reset} {bold}{result.current_version} > {result.latest_version}{reset}")
+        print(f"{cyan} LOCAL VERSION AHEAD {reset} {bold}{result.current_version} > {result.latest_version}{reset}", flush=True)
     elif result.status == "current":
-        print(f"{green} CORTEX VERSION CURRENT {reset} {bold}v{result.current_version}{reset}")
+        print(f"{green} CORTEX VERSION CURRENT {reset} {bold}v{result.current_version}{reset}", flush=True)
     else:
-        print(f"{red} VERSION CHECK UNAVAILABLE {reset} {bold}local v{result.current_version}{reset}")
+        print(f"{red} VERSION CHECK UNAVAILABLE {reset} {bold}local v{result.current_version}{reset}", flush=True)

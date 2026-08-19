@@ -6,7 +6,7 @@ All notable changes to Cortex are documented in this file.
 
 ### Added
 
-- Non-blocking startup version checks against the remote `PROJECT_VERSION`.
+- Startup version checks against the remote `PROJECT_VERSION`.
 - Clear terminal states for current, update available, local ahead, and unavailable version checks.
 - A terminal changelog displayed after the startup version status.
 
