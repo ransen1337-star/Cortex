@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import os
 import re
+import sys
 from typing import Literal
 
 import httpx
@@ -14,7 +15,7 @@ DEFAULT_VERSION_SOURCE_URL = (
     "https://raw.githubusercontent.com/ransen1337-star/Cortex/main/main/core/branding.py"
 )
 VERSION_PATTERN = re.compile(r'PROJECT_VERSION\s*=\s*["\']([^"\']+)["\']')
-VersionStatus = Literal["current", "update_available", "unknown"]
+VersionStatus = Literal["current", "update_available", "local_ahead", "unknown"]
 
 
 @dataclass(frozen=True)
@@ -53,7 +54,14 @@ def check_for_update(*, client: httpx.Client | None = None) -> VersionCheckResul
             source_url=source_url,
             error="Remote version was not found",
         )
-    status: VersionStatus = "update_available" if compare_versions(latest_version, PROJECT_VERSION) > 0 else "current"
+    comparison = compare_versions(latest_version, PROJECT_VERSION)
+    status: VersionStatus = (
+        "update_available"
+        if comparison > 0
+        else "local_ahead"
+        if comparison < 0
+        else "current"
+    )
     return VersionCheckResult(
         current_version=PROJECT_VERSION,
         latest_version=latest_version,
@@ -80,9 +88,18 @@ def version_parts(version: str) -> tuple[int, ...]:
 
 
 def log_version_check(result: VersionCheckResult) -> None:
+    use_color = sys.stdout.isatty() and not os.getenv("NO_COLOR")
+    reset = "\033[0m" if use_color else ""
+    bold = "\033[1m" if use_color else ""
+    green = "\033[1;42;30m" if use_color else ""
+    yellow = "\033[1;43;30m" if use_color else ""
+    cyan = "\033[1;46;30m" if use_color else ""
+    red = "\033[1;41;37m" if use_color else ""
     if result.status == "update_available":
-        print(f"[version] update available: {result.current_version} -> {result.latest_version}")
+        print(f"{yellow} VERSION UPDATE AVAILABLE {reset} {bold}{result.current_version} -> {result.latest_version}{reset}")
+    elif result.status == "local_ahead":
+        print(f"{cyan} LOCAL VERSION AHEAD {reset} {bold}{result.current_version} > {result.latest_version}{reset}")
     elif result.status == "current":
-        print(f"[version] current: {result.current_version}")
+        print(f"{green} CORTEX VERSION CURRENT {reset} {bold}v{result.current_version}{reset}")
     else:
-        print(f"[version] check unavailable: {result.current_version}")
+        print(f"{red} VERSION CHECK UNAVAILABLE {reset} {bold}local v{result.current_version}{reset}")
