@@ -13,16 +13,23 @@ from main.api.examples import build_image_example_response
 from main.api.examples import build_json_example_response
 from main.core.branding import PROJECT_DESCRIPTION
 from main.core.branding import PROJECT_NAME
+from main.core.branding import PROJECT_VERSION
 from main.services import BilibiliExtractionError
 from main.services import BilibiliParserService
 from main.services import DouyinExtractionError
 from main.services import DouyinParserService
+from main.services import GithubExtractionError
+from main.services import GithubParserService
+from main.services import InvalidGithubUrlError
+from main.services import GithubRepositoryResponse
+from main.services import GithubRateLimitResponse
 from main.services import InvalidBilibiliUrlError
 from main.services import InvalidDouyinUrlError
 from main.services import VideoAnalysisResponse
 from main.services.share_card import DEFAULT_CARD_FONT_STACK
 from main.services.share_card import set_share_card_font_stack
 from main.services.share_card.rasterizer import ShareCardRenderError
+from main.services.share_card.rasterizer import get_share_card_render_metrics
 from main.services.share_card.rasterizer import render_share_card_image
 from main.services.utils import BILIBILI_ASSET_REFERER
 from main.services.utils import DOUYIN_ASSET_REFERER
@@ -32,7 +39,7 @@ from main.services.utils import normalize_remote_asset_url
 
 
 APP_TITLE = PROJECT_NAME
-APP_VERSION = "0.5.0"
+APP_VERSION = PROJECT_VERSION
 SHARE_CARD_ASSET_PROXY_PATH = "/api/v1/share-card/assets"
 ASSET_PROXY_CLIENT = create_http_client(20)
 
@@ -61,6 +68,7 @@ def create_app(
     *,
     bilibili_service: BilibiliParserService | None = None,
     douyin_service: DouyinParserService | None = None,
+    github_service: GithubParserService | None = None,
     asset_proxy_fetcher: AssetProxyFetcher | None = None,
     share_card_renderer: ShareCardRenderer | None = None,
 ) -> FastAPI:
@@ -68,6 +76,7 @@ def create_app(
 
     bilibili_service = bilibili_service or BilibiliParserService()
     douyin_service = douyin_service or DouyinParserService()
+    github_service = github_service or GithubParserService()
     asset_proxy_fetcher = asset_proxy_fetcher or create_default_asset_proxy_fetcher()
     share_card_renderer = share_card_renderer or render_share_card_image
 
@@ -89,6 +98,7 @@ def create_app(
                 "description": "Analyze Douyin links and return metrics, direct video source files, and direct cover source files.",
             },
             {"name": "Share Card", "description": "Render platform share cards."},
+            {"name": "GitHub", "description": "Parse public GitHub repository metadata and render repository share cards."},
         ],
     )
 
@@ -96,6 +106,7 @@ def create_app(
         app,
         bilibili_service=bilibili_service,
         douyin_service=douyin_service,
+        github_service=github_service,
         asset_proxy_fetcher=asset_proxy_fetcher,
         share_card_renderer=share_card_renderer,
     )
@@ -116,6 +127,7 @@ def register_routes(
     *,
     bilibili_service: BilibiliParserService,
     douyin_service: DouyinParserService,
+    github_service: GithubParserService,
     asset_proxy_fetcher: AssetProxyFetcher,
     share_card_renderer: ShareCardRenderer,
 ) -> None:
@@ -126,6 +138,15 @@ def register_routes(
     @app.get("/health", tags=["Cortex"], summary="Health Check")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get(
+        "/api/v1/share-card/render-metrics",
+        tags=["Share Card"],
+        summary="Share Card Render Metrics",
+        description="Return process-local PNG render concurrency and latency statistics.",
+    )
+    def share_card_render_metrics() -> dict[str, object]:
+        return get_share_card_render_metrics()
 
     @app.get(
         SHARE_CARD_ASSET_PROXY_PATH,
@@ -353,6 +374,73 @@ def register_routes(
         except InvalidDouyinUrlError as error:
             raise HTTPException(status_code=400, detail=error.message) from error
         except DouyinExtractionError as error:
+            raise HTTPException(status_code=502, detail=error.message) from error
+        except ShareCardRenderError as error:
+            raise HTTPException(status_code=502, detail=error.message) from error
+
+    @app.get(
+        "/api/v1/github/repository",
+        response_model=GithubRepositoryResponse,
+        tags=["GitHub"],
+        summary="Analyze GitHub Repository",
+        description="Return public metadata for a GitHub repository URL.",
+    )
+    def analyze_github_repository(
+        request: Request,
+        url: str = Query(..., description="GitHub repository link", examples=["https://github.com/ransen1337-star/Cortex"]),
+    ) -> GithubRepositoryResponse:
+        normalized_input = resolve_request_url_input(request, url)
+        try:
+            return github_service.parse(normalized_input)
+        except InvalidGithubUrlError as error:
+            raise HTTPException(status_code=400, detail=error.message) from error
+        except GithubExtractionError as error:
+            raise HTTPException(status_code=502, detail=error.message) from error
+
+    @app.get(
+        "/api/v1/github/rate-limit",
+        response_model=GithubRateLimitResponse,
+        tags=["GitHub"],
+        summary="GitHub API Rate Limit",
+        description="Return the configured GitHub REST API budget without exposing credentials.",
+    )
+    def github_rate_limit() -> GithubRateLimitResponse:
+        try:
+            return github_service.get_rate_limit()
+        except GithubExtractionError as error:
+            raise HTTPException(status_code=502, detail=error.message) from error
+
+    @app.get(
+        "/api/v1/github/share-card",
+        tags=["Share Card", "GitHub"],
+        summary="Render GitHub Share Card",
+        description="Render a transparent Cortex-style repository card, or proxy GitHub's official OpenGraph preview image.",
+        responses={200: build_image_example_response()},
+    )
+    def github_share_card(
+        request: Request,
+        url: str = Query(..., description="GitHub repository link", examples=["https://github.com/ransen1337-star/Cortex"]),
+        style: str = Query("cortex", description="Card visual style. Defaults to the transparent Cortex card; official returns GitHub's OpenGraph preview image.", pattern="^(cortex|official)$"),
+        mode: str | None = Query(None, description="Share-card output mode. Defaults to png when omitted", pattern="^(svg|png)$"),
+        preset: str = Query("balanced", description="PNG render preset", pattern="^(performance|balanced|quality)$"),
+        format: str | None = Query(None, description="Deprecated legacy share-card format alias", pattern="^(svg|png|jpg|jpeg)$", deprecated=True),
+    ) -> Response:
+        normalized_input = resolve_request_url_input(request, url, ignored_suffix_params=("style", "mode", "preset", "format"))
+        try:
+            if style == "official":
+                preview_url = github_service.build_official_preview_url(normalized_input)
+                content, media_type = asset_proxy_fetcher(preview_url)
+                return Response(content=content, media_type=media_type, headers={"Cache-Control": "public, max-age=21600"})
+            svg = github_service.build_share_card_svg(
+                normalized_input,
+                style=style,
+                asset_proxy_path=SHARE_CARD_ASSET_PROXY_PATH,
+            )
+            image_bytes, media_type = share_card_renderer(svg, mode=mode, png_preset=preset, legacy_format=format)
+            return Response(content=image_bytes, media_type=media_type)
+        except InvalidGithubUrlError as error:
+            raise HTTPException(status_code=400, detail=error.message) from error
+        except GithubExtractionError as error:
             raise HTTPException(status_code=502, detail=error.message) from error
         except ShareCardRenderError as error:
             raise HTTPException(status_code=502, detail=error.message) from error

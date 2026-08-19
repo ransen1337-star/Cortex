@@ -4,8 +4,8 @@
 
 # Cortex
 
-**Public Bilibili and Douyin video-analysis API source code**  
-**Bilibili 与抖音公开视频解析 API 源码项目**
+**Public Bilibili, Douyin, and GitHub link-analysis API source code**
+**Bilibili、抖音与 GitHub 公开链接解析 API 源码项目**
 
 <p>
   <a href="README.en.md"><strong>English</strong></a>
@@ -18,15 +18,16 @@
   <img src="https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/Pydantic-v2-E92063" alt="Pydantic">
   <img src="https://img.shields.io/badge/Output-JSON%20%2B%20SVG%2FPNG-2563EB" alt="Output">
+  <img src="https://img.shields.io/badge/Version-1.1.0-111827" alt="Version 1.1.0">
 </p>
 
-**Keywords:** `Bilibili API` · `Douyin API` · `video analysis API` · `video parser` · `share card generator` · `B站视频解析` · `抖音视频解析`
+**Keywords:** `Bilibili API` · `Douyin API` · `GitHub repository API` · `video analysis API` · `share card generator`
 
 </div>
 
 ## Overview
 
-Cortex is an API-only FastAPI project for public Bilibili and Douyin video analysis, video parsing, metadata extraction, and share-card rendering.
+Cortex is an API-only FastAPI project for public Bilibili and Douyin video analysis, GitHub repository metadata extraction, and share-card rendering.
 
 It provides:
 
@@ -34,6 +35,9 @@ It provides:
 - URL filtering, normalization, and fixed example-link validation
 - direct author, video, and cover metadata extraction
 - share cards in `svg` or `png`, with `performance`, `balanced`, and `quality` PNG presets
+- GitHub repository parsing with language, contributor, license, and repository metrics
+- GitHub cards in transparent `cortex` style or GitHub's official OpenGraph preview image
+- startup version check against the remote `PROJECT_VERSION`, with local/remote status output
 - a clean `main/` application layout with `start.py` as the only root entry
 
 ## Shared Response Schema
@@ -56,6 +60,31 @@ It provides:
   "cover_source": {}
 }
 ```
+
+## GitHub Endpoints
+
+```text
+/api/v1/github/repository?url=https://github.com/ransen1337-star/Cortex
+/api/v1/github/share-card?url=https://github.com/ransen1337-star/Cortex&style=cortex&mode=png
+/api/v1/github/share-card?url=https://github.com/ransen1337-star/Cortex&style=official&mode=png
+/api/v1/github/rate-limit
+```
+
+`style=cortex` uses the same transparent share-card renderer as Bilibili and Douyin. `style=official` proxies GitHub's official OpenGraph preview image.
+
+## GitHub API Budget
+
+The Cortex card style calls the GitHub REST API for repository metadata. GitHub typically allows 60 unauthenticated REST requests per hour per IP address and 5,000 authenticated requests per hour. Configure a fine-grained token with read-only public repository access through `GITHUB_TOKEN` when rendering cards regularly:
+
+```bash
+export GITHUB_TOKEN=github_pat_your_token
+```
+
+`/api/v1/github/rate-limit` reports the effective limit, remaining requests, and reset time without exposing the token. The official card style proxies GitHub's OpenGraph image and does not use this REST budget.
+
+## PNG Rendering
+
+PNG cards use CairoSVG by default and require the system Cairo library. On macOS, install it with `brew install cairo`. Set `CORTEX_SHARE_CARD_RENDERER=chromium` to use Chrome/Chromium instead; set `CORTEX_SHARE_CARD_GPU=1` to request Chromium GPU rasterization. `CORTEX_SHARE_CARD_MAX_CONCURRENCY` controls concurrent PNG renders.
 
 ## Preview
 
@@ -247,11 +276,20 @@ http://127.0.0.1:8000/openapi.json
 |   |   |-- branding/
 |   |   `-- docs/
 |   |-- core/
+|   |   |-- branding.py
+|   |   |-- runtime.py
+|   |   `-- version.py
 |   |-- services/
+|   |   |-- bilibili/
+|   |   |-- douyin/
+|   |   |-- github/
+|   |   `-- share_card/
 |   |-- requirements.txt
 |   `-- __init__.py
 `-- start.py
 ```
+
+The startup version check reads the remote source configured by `CORTEX_VERSION_SOURCE_URL`; by default it checks the repository's `main/core/branding.py`.
 
 ## Notes
 

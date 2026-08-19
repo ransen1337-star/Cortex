@@ -75,3 +75,38 @@ class VideoAnalysisResponse(BaseModel):
     metrics: VideoMetrics = Field(description="Video metrics")
     video_source: VideoSourceFile = Field(description="Direct video source information")
     cover_source: SourceFile = Field(description="Direct cover source information")
+
+
+class GithubRepositoryResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    product: Literal["Cortex"] = Field(description="Product name")
+    platform: Literal["github"] = Field(description="Matched platform")
+    input_url: str = Field(description="Normalized repository URL used for parsing")
+    canonical_url: str = Field(description="Canonical GitHub repository URL")
+    repository_id: str = Field(description="Repository full name")
+    owner: str
+    name: str
+    description: str | None = None
+    avatar_url: str | None = None
+    language: str | None = None
+    languages: list[str] = Field(default_factory=list)
+    contributor_count: int | None = None
+    contributors: list[str] = Field(default_factory=list)
+    stars: int = 0
+    forks: int = 0
+    open_issues: int = 0
+    watchers: int = 0
+    license_name: str | None = None
+    is_private: bool = False
+
+
+class GithubRateLimitResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    product: Literal["Cortex"] = Field(description="Product name")
+    platform: Literal["github"] = Field(description="Matched platform")
+    authenticated: bool = Field(description="Whether a GitHub token is configured")
+    limit: int | None = Field(default=None, description="Current GitHub REST API request limit")
+    remaining: int | None = Field(default=None, description="Remaining requests in the active GitHub REST API window")
+    reset_at: datetime | None = Field(default=None, description="GitHub REST API reset time in ISO 8601 format")

@@ -31,7 +31,12 @@ def create_http_client(timeout: int) -> httpx.Client:
     try:
         return httpx.Client(http2=True, follow_redirects=True, timeout=timeout)
     except ImportError:
-        return httpx.Client(follow_redirects=True, timeout=timeout)
+        try:
+            return httpx.Client(follow_redirects=True, timeout=timeout)
+        except httpx.InvalidURL:
+            return httpx.Client(follow_redirects=True, timeout=timeout, trust_env=False)
+    except httpx.InvalidURL:
+        return httpx.Client(http2=True, follow_redirects=True, timeout=timeout, trust_env=False)
 
 
 def coerce_string(value: Any) -> str | None:

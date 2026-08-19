@@ -4,7 +4,7 @@
 
 # Cortex
 
-**面向 Bilibili 与抖音公开视频解析的 API 源码项目**
+**面向 Bilibili、抖音与 GitHub 公开链接解析的 API 源码项目**
 
 <p>
   <a href="README.md"><strong>总览</strong></a>
@@ -12,13 +12,15 @@
   <a href="README.en.md"><strong>English</strong></a>
 </p>
 
-**关键词：** `B站视频解析` · `抖音视频解析` · `视频解析 API` · `视频链接解析` · `FastAPI` · `分享卡片生成`
+**关键词：** `B站视频解析` · `抖音视频解析` · `GitHub 仓库解析` · `视频解析 API` · `FastAPI` · `分享卡片生成`
+
+**当前版本：** `1.1.0`
 
 </div>
 
 ## 简介
 
-Cortex 是一个只做 API 的 FastAPI 项目，专注于 Bilibili 与抖音公开视频解析、视频链接解析、元数据提取与分享卡片生成。
+Cortex 是一个只做 API 的 FastAPI 项目，专注于 Bilibili 与抖音公开视频解析、GitHub 仓库元数据提取与分享卡片生成。
 
 它提供：
 
@@ -26,6 +28,9 @@ Cortex 是一个只做 API 的 FastAPI 项目，专注于 Bilibili 与抖音公�
 - 链接过滤、规范化与固定示例链接校验
 - 作者、视频与封面等元数据提取
 - 支持 `svg` 或 `png` 的分享卡片，`png` 提供 `performance`、`balanced`、`quality` 三档
+- GitHub 默认使用透明背景的 `cortex` 卡片（与 Bilibili / 抖音共用同一渲染链路），`official` 直接返回 GitHub 官方 OpenGraph 预览图片
+- GitHub 仓库响应包含主语言与语言列表；Cortex 卡片会在标签区展示最多 3 种语言和许可证
+- 启动后异步校验本地版本与远端 `PROJECT_VERSION`，输出当前、可更新、本地领先或检查失败状态
 - 根目录只保留 `start.py` 的简洁 `main/` 结构
 
 ## 统一返回结构
@@ -48,6 +53,40 @@ Cortex 是一个只做 API 的 FastAPI 项目，专注于 Bilibili 与抖音公�
   "cover_source": {}
 }
 ```
+
+## GitHub 接口
+
+GitHub 解析接口：
+
+```text
+/api/v1/github/repository?url=https://github.com/ransen1337-star/Cortex
+```
+
+GitHub 分享卡片接口：
+
+```text
+/api/v1/github/share-card?url=https://github.com/ransen1337-star/Cortex&style=cortex&mode=png
+/api/v1/github/share-card?url=https://github.com/ransen1337-star/Cortex&style=official&mode=png
+/api/v1/github/rate-limit
+```
+
+`style=cortex` 默认使用与 Bilibili / 抖音一致的透明横向卡片布局，并支持 `svg` 与 `png` 输出；`style=official` 直接代理 GitHub 官方 OpenGraph 图片。
+
+GitHub Cortex 卡片右侧社区栏展示贡献者头像、贡献者数量和语言占比；语言较多时只展示前 4 种，避免文本溢出。
+
+## GitHub API 配额
+
+Cortex 风格卡片会调用 GitHub REST API 获取仓库数据。GitHub 通常为未认证请求提供每 IP 每小时 60 次额度，为认证请求提供每小时 5,000 次额度。经常生成卡片时，请配置只读公开仓库权限的细粒度 Token：
+
+```bash
+export GITHUB_TOKEN=github_pat_your_token
+```
+
+`/api/v1/github/rate-limit` 会返回实际生效的总额度、剩余额度与重置时间，不会返回 Token。`official` 卡片仅代理 GitHub OpenGraph 图片，不消耗上述 REST API 配额。
+
+## PNG 渲染
+
+PNG 默认使用 CairoSVG，需安装系统 Cairo 库。macOS 可执行 `brew install cairo`。设置 `CORTEX_SHARE_CARD_RENDERER=chromium` 可改用 Chrome/Chromium；设置 `CORTEX_SHARE_CARD_GPU=1` 可请求 Chromium GPU 栅格化。`CORTEX_SHARE_CARD_MAX_CONCURRENCY` 控制 PNG 并发渲染数量。
 
 ## 预览
 
@@ -239,11 +278,20 @@ http://127.0.0.1:8000/openapi.json
 |   |   |-- branding/
 |   |   `-- docs/
 |   |-- core/
+|   |   |-- branding.py
+|   |   |-- runtime.py
+|   |   `-- version.py
 |   |-- services/
+|   |   |-- bilibili/
+|   |   |-- douyin/
+|   |   |-- github/
+|   |   `-- share_card/
 |   |-- requirements.txt
 |   `-- __init__.py
 `-- start.py
 ```
+
+启动版本检查默认读取仓库 `main` 分支的 `main/core/branding.py`；可通过 `CORTEX_VERSION_SOURCE_URL` 指定自定义版本源。
 
 ## 说明
 

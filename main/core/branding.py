@@ -1,7 +1,7 @@
 """Centralized Cortex project branding."""
 
 PROJECT_NAME = "Cortex"
-PROJECT_VERSION = "1.0.1"
+PROJECT_VERSION = "1.1.0"
 PROJECT_AUTHOR = "Ransen1337-star"
 PROJECT_SIGNATURE = f"{PROJECT_NAME} by {PROJECT_AUTHOR}"
 PROJECT_TAGLINE = "Public Bilibili, Douyin, and GitHub link analysis with reusable share cards"

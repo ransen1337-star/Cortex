@@ -10,6 +10,11 @@ from main.services.models import VideoAuthorVerification
 from main.services.models import VideoAnalysisResponse
 from main.services.models import VideoMetrics
 from main.services.models import VideoSourceFile
+from main.services.models import GithubRepositoryResponse
+from main.services.models import GithubRateLimitResponse
+from main.services.github import GithubExtractionError
+from main.services.github import GithubParserService
+from main.services.github import InvalidGithubUrlError
 
 __all__ = [
     "BilibiliExtractionError",
@@ -24,4 +29,9 @@ __all__ = [
     "VideoAnalysisResponse",
     "VideoMetrics",
     "VideoSourceFile",
+    "GithubRepositoryResponse",
+    "GithubRateLimitResponse",
+    "GithubExtractionError",
+    "GithubParserService",
+    "InvalidGithubUrlError",
 ]

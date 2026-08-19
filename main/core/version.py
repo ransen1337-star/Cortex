@@ -32,7 +32,13 @@ def check_for_update(*, client: httpx.Client | None = None) -> VersionCheckResul
     source_url = os.getenv("CORTEX_VERSION_SOURCE_URL", DEFAULT_VERSION_SOURCE_URL)
     cache_separator = "&" if "?" in source_url else "?"
     request_url = f"{source_url}{cache_separator}cortex_version_check={int(time.time())}"
-    http_client = client or httpx.Client(follow_redirects=True, timeout=5)
+    if client is not None:
+        http_client = client
+    else:
+        try:
+            http_client = httpx.Client(follow_redirects=True, timeout=5)
+        except httpx.InvalidURL:
+            http_client = httpx.Client(follow_redirects=True, timeout=5, trust_env=False)
     should_close = client is None
     try:
         response = http_client.get(

@@ -1,5 +1,6 @@
+cairosvg
 fastapi
-httpx
+httpx[http2]
 pillow
 pydantic
 uvicorn

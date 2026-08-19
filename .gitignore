@@ -6,6 +6,7 @@ __pycache__/
 .Python
 .env
 .env.*
+.cortex/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/

@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from main.services.utils import build_remote_asset_request_headers
 from main.services.utils import create_http_client
 from main.services.utils import normalize_remote_asset_url
+from main.core.branding import PROJECT_VERSION
 
 
 DEFAULT_CARD_FONT_STACK = "Noto Sans SC, PingFang SC, Microsoft YaHei, Segoe UI, sans-serif"
@@ -61,18 +62,36 @@ class ShareCardBranding(BaseModel):
     logo_view_box: str = "0 0 2338 1000"
 
 
+class ShareCardSidebarContributor(BaseModel):
+    name: str
+    avatar_url: str | None = None
+
+
+class ShareCardSidebarLanguage(BaseModel):
+    name: str
+    share: int = 0
+
+
+class ShareCardSidebar(BaseModel):
+    title: str = "Community"
+    contributors: list[ShareCardSidebarContributor] = Field(default_factory=list)
+    contributor_count: int | None = None
+    languages: list[ShareCardSidebarLanguage] = Field(default_factory=list)
+
+
 class ShareCardData(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str
     canonical_url: str
     cover_url: str | None = None
-    cover_layout: Literal["landscape", "portrait"] = "landscape"
+    cover_layout: Literal["landscape", "portrait", "github"] = "landscape"
     author: ShareCardAuthor
     tags: list[str] = Field(default_factory=list)
     primary_metrics: list[ShareCardMetric] = Field(default_factory=list)
     secondary_metrics: list[ShareCardMetric] = Field(default_factory=list)
     branding: ShareCardBranding | None = None
+    sidebar: ShareCardSidebar | None = None
 
 
 def set_share_card_font_stack(font_stack: str | None) -> None:
@@ -95,12 +114,17 @@ def render_share_card_svg(card_data: ShareCardData, asset_proxy_path: str | None
     title_bottom_y = title_start_y + (len(title_lines) - 1) * 60
     tag_y = title_bottom_y + 44
     logo_url = card_data.branding.logo_url if card_data.branding is not None else None
+    sidebar_avatar_urls = [
+        contributor.avatar_url
+        for contributor in (card_data.sidebar.contributors if card_data.sidebar else [])
+    ]
     asset_uris = fetch_remote_image_data_uris(
         [
             card_data.author.avatar_url,
             card_data.author.badge_icon_url,
             card_data.cover_url,
             logo_url,
+            *sidebar_avatar_urls,
         ],
         asset_proxy_path=asset_proxy_path,
     )
@@ -116,6 +140,7 @@ def render_share_card_svg(card_data: ShareCardData, asset_proxy_path: str | None
         build_secondary_metric(968, 250 + index * 82, metric, SECONDARY_LABEL_FILL, SECONDARY_VALUE_FILL)
         for index, metric in enumerate(card_data.secondary_metrics[:3])
     )
+    sidebar_nodes = build_sidebar_nodes(card_data.sidebar, asset_uris) if card_data.sidebar else secondary_metric_nodes
     tag_nodes = build_tag_flow(card_data.tags[:4], 54, tag_y, 18, cover_layout["tag_max_x"])
     avatar_image = ""
     if avatar_data_uri:
@@ -170,6 +195,7 @@ def render_share_card_svg(card_data: ShareCardData, asset_proxy_path: str | None
   <clipPath id="coverClip">
     <rect x="{cover_layout["x"]}" y="{cover_layout["y"]}" width="{cover_layout["width"]}" height="{cover_layout["height"]}" rx="{cover_layout["radius"]}" />
   </clipPath>
+  {build_sidebar_avatar_clips(card_data.sidebar)}
   {build_cover_mask_gradient(cover_layout)}
   <linearGradient id="coverSheen" x1="{cover_layout["x"]}" y1="{cover_layout["y"]}" x2="{cover_layout["x"] + cover_layout["width"]}" y2="{cover_layout["y"] + cover_layout["height"]}" gradientUnits="userSpaceOnUse">
     <stop offset="0" stop-color="#FFFFFF" />
@@ -191,9 +217,10 @@ def render_share_card_svg(card_data: ShareCardData, asset_proxy_path: str | None
 <line x1="54" y1="{divider_y}" x2="1146" y2="{divider_y}" stroke="#F1F5F9" stroke-width="2" />
 {title_text}
 {tag_nodes}
-<text x="54" y="{602 + CONTENT_BLOCK_OFFSET_Y}" fill="#94A3B8" font-size="16" font-weight="600" font-family="{CARD_FONT_STACK}">{escape(card_data.canonical_url)}</text>
+<text x="54" y="{592 + CONTENT_BLOCK_OFFSET_Y}" fill="#94A3B8" font-size="16" font-weight="600" font-family="{CARD_FONT_STACK}">{escape(card_data.canonical_url)}</text>
+<text x="54" y="612" fill="#CBD5E1" font-size="13" font-weight="600" font-family="{CARD_FONT_STACK}">Cortex v{escape(PROJECT_VERSION)}</text>
 {primary_metric_nodes}
-{secondary_metric_nodes}
+{sidebar_nodes}
 {build_brand_logo(card_data.branding, brand_logo_data_uri)}
 </svg>"""
 
@@ -219,7 +246,17 @@ def build_cover_backdrop(cover_data_uri: str | None, cover_layout: dict[str, int
 </g>"""
 
 
-def resolve_cover_layout(layout: Literal["landscape", "portrait"]) -> dict[str, int | str]:
+def resolve_cover_layout(layout: Literal["landscape", "portrait", "github"]) -> dict[str, int | str]:
+    if layout == "github":
+        return {
+            "x": 676,
+            "y": 218,
+            "width": 204,
+            "height": 268,
+            "radius": 28,
+            "preserve_aspect_ratio": "xMidYMid slice",
+            "tag_max_x": 650,
+        }
     if layout == "portrait":
         return {
             "x": 786,
@@ -273,11 +310,62 @@ def build_primary_metric(x: int, y: int, metric: ShareCardMetric) -> str:
 def build_secondary_metric(x: int, y: int, metric: ShareCardMetric, label_fill: str, value_fill: str) -> str:
     label_node = ""
     if metric.label:
-        label_node = f'<text x="{x}" y="{y}" fill="{label_fill}" font-size="18" font-weight="700" font-family="{CARD_FONT_STACK}">{escape(metric.label)}</text>'
+        label_node = f'<text x="{x}" y="{y}" fill="{label_fill}" font-size="18" font-weight="700" font-family="{CARD_FONT_STACK}">{escape(truncate_text_units(metric.label, 12))}</text>'
+    safe_value = truncate_text_units(metric.value, 8)
     return f"""<g>
 {label_node}
-<text x="{x}" y="{y + 38}" fill="{value_fill}" font-size="38" font-weight="800" font-family="{CARD_FONT_STACK}">{escape(metric.value)}</text>
+<text x="{x}" y="{y + 38}" fill="{value_fill}" font-size="38" font-weight="800" font-family="{CARD_FONT_STACK}">{escape(safe_value)}</text>
 </g>"""
+
+
+def build_sidebar_nodes(sidebar: ShareCardSidebar, asset_uris: dict[str | None, str | None]) -> str:
+    contributors = sidebar.contributors[:3]
+    languages = sidebar.languages[:4]
+    contributor_nodes: list[str] = []
+    for index, contributor in enumerate(contributors):
+        x = 700 + index * 54
+        avatar_uri = asset_uris.get(contributor.avatar_url)
+        if avatar_uri:
+            contributor_nodes.append(
+                build_image_node(
+                    avatar_uri,
+                    x=x,
+                    y=256,
+                    width=38,
+                    height=38,
+                    preserve_aspect_ratio="xMidYMid slice",
+                    extra_attributes=f'clip-path="url(#sidebarAvatarClip{index})"',
+                )
+            )
+        else:
+            contributor_nodes.append(f'<circle cx="{x + 19}" cy="275" r="19" fill="#E5E7EB" />')
+    contributor_names = ", ".join(contributor.name for contributor in contributors)
+    if sidebar.contributor_count and sidebar.contributor_count > len(contributors):
+        contributor_names = f"{contributor_names} +{sidebar.contributor_count - len(contributors)}"
+    language_nodes: list[str] = []
+    max_share = max((language.share for language in languages), default=1)
+    for index, language in enumerate(languages):
+        y = 370 + index * 42
+        language_nodes.append(
+            f'<text x="700" y="{y}" fill="#475569" font-size="15" font-weight="700" font-family="{CARD_FONT_STACK}">{escape(truncate_text_units(language.name, 12))}</text>'
+            f'<rect x="700" y="{y + 10}" width="188" height="6" rx="3" fill="#E2E8F0" />'
+            f'<rect x="700" y="{y + 10}" width="{max(18, int(188 * language.share / max_share))}" height="6" rx="3" fill="#0F172A" />'
+        )
+    return f'''<line x1="674" y1="208" x2="674" y2="526" stroke="#E2E7F0" stroke-width="2" />
+<text x="700" y="222" fill="#0F172A" font-size="18" font-weight="800" font-family="{CARD_FONT_STACK}">{escape(sidebar.title)}</text>
+{"".join(contributor_nodes)}
+<text x="700" y="315" fill="#64748B" font-size="14" font-weight="600" font-family="{CARD_FONT_STACK}">{escape(truncate_text_units(contributor_names or "No contributors", 30))}</text>
+<text x="700" y="350" fill="#0F172A" font-size="16" font-weight="800" font-family="{CARD_FONT_STACK}">Languages</text>
+{"".join(language_nodes)}'''
+
+
+def build_sidebar_avatar_clips(sidebar: ShareCardSidebar | None) -> str:
+    if sidebar is None:
+        return ""
+    return "".join(
+        f'<clipPath id="sidebarAvatarClip{index}"><circle cx="{719 + index * 54}" cy="275" r="19" /></clipPath>'
+        for index, _ in enumerate(sidebar.contributors[:3])
+    )
 
 
 def build_brand_logo(branding: ShareCardBranding | None, logo_data_uri: str | None = None) -> str:
